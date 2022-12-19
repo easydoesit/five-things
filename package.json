@@ -1,0 +1,28 @@
+{
+  "name": "five-things",
+  "version": "1.0.0",
+  "lockfileVersion": 2,
+  "requires": true,
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "description": "A todo app designed to get you to focus on 5 important things.",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/easydoesit/five-things.git"
+  },
+  "keywords": [
+    "todo"
+  ],
+  "author": "Michael Grills",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/easydoesit/five-things/issues"
+  },
+  "homepage": "https://github.com/easydoesit/five-things#readme"
+}
