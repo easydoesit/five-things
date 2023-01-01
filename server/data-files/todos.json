@@ -1,26 +1,83 @@
-{
-  "ts000001": {
+[
+  {
+    "id": 1,
     "title": "Code for 3 hours",
     "status": "incomplete",
-    "location": "0_Mon_Major",
+    "location": "today",
+    "type": "single_task",
+    "order": 2,
     "created_at": 1670821501314
   },
-  "ts000002": {
+  {
+    "id": 2,
+    "title": "Make todos in order ",
+    "status": "complete",
+    "location": "today",
+    "type": "single_task",
+    "order": 1,
+    "created_at": 1670821501314
+  },
+  {
+    "id": 3,
+    "title": "Make keep box sizes small ",
+    "status": "incomplete",
+    "location": "today",
+    "type": "single_task",
+    "order": 0,
+    "created_at": 1670821501314
+  },
+  {
+    "id": 4,
+    "title": "Brag about this app",
+    "status": "incomplete",
+    "location": "tomorrow",
+    "type": "single_task",
+    "order": 3,
+    "created_at": 1670821501314
+  },
+  {
+    "id": 5,
     "title": "Finish Storyboards",
     "status": "incomplete",
-    "location": "0_Mon_Minor",
+    "location": "tomorrow",
+    "type": "single_task",
+    "order": 0,
     "created": 1670821501314
   },
-  "ts000003": {
+  {
+    "id": 6,
+    "title": "Share App",
+    "status": "incomplete",
+    "location": "opportunities",
+    "type": "single_task",
+    "order": 1,
+    "created": 1670821501314
+  },
+  {
+    "id": 7,
+    "title": "Eat Chicken Wings",
+    "status": "incomplete",
+    "location": "opportunities",
+    "type": "single_task",
+    "order": 0,
+    "created": 1670821501314
+  },
+  {
+    "id": 8,
     "title": "Christmas",
     "status": "incomplete",
-    "location": "0_Sat_Major",
+    "location": "day-after",
+    "type": "obligation",
+    "order": 0,
     "created": 1670821501314
   },
-  "ts000004": {
+  {
+    "id": 9,
     "title": "Sort this task",
     "status": "incomplete",
-    "location": "bucket",
+    "location": "recurring",
+    "type": "recurring",
+    "order": 0,
     "created": 1670821501314
   }
-}
+]

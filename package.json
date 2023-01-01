@@ -1,16 +1,17 @@
 {
-  "name": "five-things",
+  "name": "agile-todo",
   "version": "1.0.0",
   "lockfileVersion": 2,
   "requires": true,
   "dependencies": {
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "nodemon": "^2.0.20"
   },
   "description": "A todo app designed to get you to focus on 5 important things.",
-  "main": "index.js",
-  "devDependencies": {},
+  "main": "./server/index.js",
   "scripts": {
-    "test": "test"
+    "test": "test",
+    "start": "./node_modules/.bin/nodemon -L server.js --ignore ./data/"
   },
   "repository": {
     "type": "git",

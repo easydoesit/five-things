@@ -1,0 +1,273 @@
+$(document).ready(function() {
+  let clientData;
+  let newID;
+  let idList;
+  let todayCount = 0;
+  let tomorrowCount = 0;
+  let nextDayCount = 0;
+  let opportunitiesCount = 0;
+  let recurringCount = 0;
+
+  console.log("document ready");
+  // renderTodos takes in a array of Todo's and displays them
+  const renderTodaysTodos = function(todos) {
+    console.log("render", todos);
+    for (let i in todos) {
+      
+      if (todos[i].location === "today") {
+        $("#today ul").append(createTodo(todos[i]));
+        todayCount = newTodoOrder(todos[i].order);
+      }
+
+      if (todos[i].location === "tomorrow") {
+        $("#tomorrow ul").append(createTodo(todos[i]));
+        tomorrowCount = newTodoOrder(todos[i].order);
+      }
+
+      if (todos[i].location === "day-after") {
+        $("#day-after ul").append(createTodo(todos[i]));
+        nextDayCount = newTodoOrder(todos[i].order);
+      }
+
+      if (todos[i].location === "opportunities") {
+        $("#opportunities ul").append(createTodo(todos[i]));
+        opportunitiesCount = newTodoOrder(todos[i].order);
+      }
+
+      if (todos[i].location === "recurring") {
+        $("#recurring ul").append(createTodo(todos[i]));
+        recurringCount = newTodoOrder(todos[i].order);
+      }
+
+    }
+  };
+
+  //create and render todo
+  const createTodo = function(todo) {
+    
+    const statusCheck = function() {
+      let output;
+    
+      if (todo.status !== "complete") {
+        output = `<input type="checkbox" name="id" id="${todo.id}" value="${todo.id}" class="checkbox"></input>
+        <label for="${todo.id}" name="title" id="${todo.id}" value="${todo.title}">${todo.title}</label>
+        <input id="text" type="hidden" name="text" value="${todo.title}">
+        <input id="location" type="hidden" name="location" value="${todo.location}">
+        <input id="order" type="hidden" name="order" value="${todo.order}">
+        <input id="status" type="hidden" name="status" value="incomplete">
+        <input id="created_at" type="hidden" name="created_at" value="${todo.created_at}">
+        <input id="type" type="hidden" name="type" value="single_task">        
+        `;
+      } else {
+        output = `<input type="checkbox" name="id" id="${todo.id}" value="${todo.id}" class="checkbox" checked></input>
+        <label for="${todo.id}" name="title" id="${todo.id}" value="${todo.title}" class="crossoff">${todo.title}</label>
+        <input id="text" type="hidden" name="text" value="${todo.title}">
+        <input id="location" type="hidden" name="location" value="${todo.location}">
+        <input id="order" type="hidden" name="order" value="${todo.order}">
+        <input id="status" type="hidden" name="status" value="complete">
+        <input id="created_at" type="hidden" name="created_at" value="${todo.created_at}">
+        <input id="type" type="hidden" name="type" value="single_task">     
+        `;
+      }
+    
+      return output;
+    
+    };
+    const fullTodo = `<li><form class="todoItem" id="${todo.id}"><div>
+    ${statusCheck()}
+    </div>
+    <div>
+    <i class="fa fa-pencil" aria-hidden="true"></i>
+    <i class="fa fa-arrows" aria-hidden="true"></i>
+    <i class="fa fa-trash" aria-hidden="true"></i>
+    </div>
+    </form>
+    </li>`;
+    
+    return fullTodo;
+  
+  };
+
+  // load todos and render them
+  const loadTodos = function() {
+    $.ajax("/todos", { method: "GET" }).then(function(data) {
+      clientData = data;
+      console.log("clientData", clientData);
+      newID = idCheck(clientData);
+      console.log('newID', newID);
+      idList = getIDList();
+
+
+      if (!$(".window li").length) {
+        renderTodaysTodos(clientData);
+      } else {
+        const lastTodo = [data.find(item => item.id === newID - 1)];
+        console.log(lastTodo);
+        renderTodaysTodos(lastTodo);
+      }
+    
+    });
+  
+  };
+
+  // create a new todo FORM based on type and position
+  $("#today h2 a").on("click", (event) => {
+    event.preventDefault();
+    $("#today ul").append(todoForm(checkFormVal(removeTodoForms()), 'today', todayCount));
+  });
+
+  $("#tomorrow h2 a").on("click", (event) => {
+    event.preventDefault();
+    $("#tomorrow ul").append(todoForm(checkFormVal(removeTodoForms()), 'tomorrow', tomorrowCount));
+  });
+
+  $("#day-after h2 a").on("click", (event) => {
+    event.preventDefault();
+    $("#day-after ul").append(todoForm(checkFormVal(removeTodoForms()), 'day-after', nextDayCount));
+  });
+
+  $("#opportunities h2 a").on("click", (event) => {
+    event.preventDefault();
+    $("#opportunities ul").append(todoForm(checkFormVal(removeTodoForms()), 'opportunities', opportunitiesCount));
+  });
+
+  $("#recurring h2 a").on("click", (event) => {
+    event.preventDefault();
+    $("#recurring ul").append(todoForm(checkFormVal(removeTodoForms()), 'recurring', recurringCount));
+  });
+
+  //render newTodo Form
+  const todoForm = function(formVal, window, orderCount)  {
+    const renderTodoForm = `
+    <li>
+      <form id ="todoForm">
+        <input type=TEXT name="text" id="todo-text" value="${formVal}">
+        <input type="hidden" name="id" value=${newID}>
+        <input type="hidden" name="location" value="${window}">
+        <input type="hidden" name="order" value="${orderCount}">
+        <input type="hidden" name= status" value="incomplete">
+        <button id="new-todo-button" type="submit" class="button"><i class="fa-solid fa-plus"></i></button>
+        <button id="cancel-todo-button" type="link" class="button"><i class="fa-solid fa-minus"></i></button>
+        </form>     
+    </li>`;
+
+    return renderTodoForm;
+  
+  };
+
+  // remove any todo Form Elements if they are there.
+  const removeTodoForms = function() {
+
+    if ($("#todoForm").length) {
+    
+      if (!$("#todoForm input").val()) {
+        $("#todoForm").parent().remove();
+      } else {
+        const value = $("#todoForm input").val();
+        $("#todoForm").parent().remove();
+        return value;
+      }
+    
+    }
+  
+  };
+
+  //check the form value to carry it over to a different form.
+  const checkFormVal = function(value) {
+    if (value === undefined) {
+      return "";
+    } else {
+      return value;
+    }
+  };
+
+  //cancel newTodo
+  $(".window").on("click", "#cancel-todo-button", (event) => {
+    event.preventDefault();
+
+    $("#todoForm").parent().remove();
+
+  });
+
+  //submit a newTodo
+  $(".window").on("click", "#new-todo-button", (event) => {
+    event.preventDefault();
+    
+    const formData = $("#todoForm").serialize();
+    
+    console.log(formData);
+    
+    $.post("/todos", formData, () => {
+    });
+    
+    $("#todoForm").parent().remove();
+    
+    loadTodos();
+
+  });
+
+  //put the newTodo at the bottom of the list
+  const newTodoOrder = function(orderNum) {
+    let count = 0;
+    
+    if (count < orderNum) {
+      count += orderNum + 1;
+    }
+    
+    return count;
+
+  };
+
+  // get the largest ID number and return a larger one.
+  const idCheck = function(data) {
+    const idArray = [];
+    
+    for (let i in data) {
+      idArray.push(parseInt(data[i].id));
+      console.log(idArray);
+    }
+    
+    let idNum = Math.max(...idArray);
+    idNum += 1;
+    
+    return idNum;
+  };
+
+  // get all the client Data Ids and put them in an array
+  // Check if you need this.
+  const getIDList = function() {
+    let list = [];
+    for (let i in clientData) {
+      list.push(clientData[i].id);
+    }
+    return list;
+  };
+  
+
+  // when a checkbox is checked get it's id and crossoff the label
+  
+  $(".window").on("click", "input[type=checkbox]", function() {
+    let checkboxId = $(this).prop('id');
+    crossOffTodo(checkboxId);
+    const formData = $(`form[id="${checkboxId}"]`).serialize();
+    console.log(formData);
+    $.post("/todos", formData, () => {
+    });
+  });
+  
+  //crossoff Todo
+  const crossOffTodo = function(id) {
+    if ($(`.todoItem div input:checkbox[id="${id}"]`).is(":checked")) {
+      $(`.todoItem div label[for="${id}"]`).addClass("crossoff");
+      $(`.todoItem div input#status`).val("complete");
+    } else {
+      $(`.todoItem div label[for="${id}"]`).removeClass("crossoff");
+      $(`.todoItem div input#status`).val("incomplete");
+    }
+  };
+
+  loadTodos();
+
+});
+
+
