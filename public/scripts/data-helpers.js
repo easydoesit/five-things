@@ -19,6 +19,7 @@ module.exports = function makeDataHelpers(db) {
         db.push(todo);
       } else {
         const todoIndex = db.findIndex((obj => obj.id === todo.id));
+        db[todoIndex].status = todo.status;
         console.log("index", todoIndex);
 
       }

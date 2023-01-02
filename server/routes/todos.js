@@ -29,7 +29,7 @@ module.exports = function(dataHelpers) {
       location: req.body.location,
       type: "single_task",
       order:req.body.order,
-      created_at: Date.now()
+      created_at: Date.now()//todo this needs to be made into an update function.
     };
 
     dataHelpers.saveTodo(todo, (err) => {
