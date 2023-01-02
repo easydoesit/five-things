@@ -49,8 +49,9 @@ $(document).ready(function() {
       let output;
     
       if (todo.status !== "complete") {
-        output = `<input type="checkbox" name="id" id="${todo.id}" value="${todo.id}" class="checkbox"></input>
-        <label for="${todo.id}" name="title" id="${todo.id}" value="${todo.title}">${todo.title}</label>
+        output = `<input id="${todo.id}" name="checkbox${todo.id}" type="checkbox" class="checkbox"></input>
+        <label for="checkbox${todo.id}" name="title" id="${todo.id}" value="${todo.title}">${todo.title}</label>
+        <input id="id" type ="hidden" name="id" value="${todo.id}">
         <input id="text" type="hidden" name="text" value="${todo.title}">
         <input id="location" type="hidden" name="location" value="${todo.location}">
         <input id="order" type="hidden" name="order" value="${todo.order}">
@@ -59,8 +60,9 @@ $(document).ready(function() {
         <input id="type" type="hidden" name="type" value="single_task">        
         `;
       } else {
-        output = `<input type="checkbox" name="id" id="${todo.id}" value="${todo.id}" class="checkbox" checked></input>
-        <label for="${todo.id}" name="title" id="${todo.id}" value="${todo.title}" class="crossoff">${todo.title}</label>
+        output = `<input id="${todo.id}" type="checkbox" name="checkbox${todo.id}" class="checkbox" checked></input>
+        <label for="checkbox${todo.id}" name="title" id="${todo.id}" value="${todo.title}" class="crossoff">${todo.title}</label>
+        <input id="id" type ="hidden" name="id" value="${todo.id}">
         <input id="text" type="hidden" name="text" value="${todo.title}">
         <input id="location" type="hidden" name="location" value="${todo.location}">
         <input id="order" type="hidden" name="order" value="${todo.order}">
@@ -258,10 +260,10 @@ $(document).ready(function() {
   //crossoff Todo
   const crossOffTodo = function(id) {
     if ($(`.todoItem div input:checkbox[id="${id}"]`).is(":checked")) {
-      $(`.todoItem div label[for="${id}"]`).addClass("crossoff");
+      $(`.todoItem div label[for="checkbox${id}"]`).addClass("crossoff");
       $(`.todoItem div input#status`).val("complete");
     } else {
-      $(`.todoItem div label[for="${id}"]`).removeClass("crossoff");
+      $(`.todoItem div label[for="checkbox${id}"]`).removeClass("crossoff");
       $(`.todoItem div input#status`).val("incomplete");
     }
   };
