@@ -8,7 +8,9 @@ module.exports = function makeDataHelpers(db) {
     saveTodo: function(todo, callback) {
       let match = false;
       console.log(todo);
+      
       todo.id = parseInt(todo.id);
+      
       for (let i in db) {
         if (db[i].id === todo.id) {
           match = true;
@@ -17,11 +19,15 @@ module.exports = function makeDataHelpers(db) {
 
       //if the todo doesn't exist add it, otherwise updated it.
       if (match !== true) {
+      
         db.push(todo);
+      
       } else {
         const todoIndex = db.findIndex((obj => obj.id === todo.id));
+      
         db[todoIndex].status = todo.status;
         db[todoIndex].order = parseInt(todo.order);
+      
         console.log("index", todoIndex);
 
       }

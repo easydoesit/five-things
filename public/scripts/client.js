@@ -6,15 +6,19 @@ $(document).ready(function() {
   let nextDayCount = 0;
   let opportunitiesCount = 0;
   let recurringCount = 0;
-
-  console.log("document ready");
+  
   // renderTodos takes in a array of Todo's and displays them
   const renderTodaysTodos = function(todos) {
     console.log("render", todos);
     for (let i in todos) {
       
-      if (todos[i].location === "today") {
-        $("#today ul").append(createTodo(todos[i]));
+      if (todos[i].location === "today" && todos[i].status === "incomplete") {
+        $("#today ul.incomplete").append(createTodo(todos[i]));
+        todayCount = newTodoOrder(todos[i].order);
+      }
+
+      if (todos[i].location === "today" && todos[i].status === "complete") {
+        $("#today ul.complete").append(createTodo(todos[i]));
         todayCount = newTodoOrder(todos[i].order);
       }
 
@@ -42,7 +46,6 @@ $(document).ready(function() {
   };
 
   //create and render todo
-  //TODO - Dry up this Function
   const createTodo = function(todo) {
     let checked = "";
     let crossoff = "";
@@ -69,7 +72,7 @@ $(document).ready(function() {
     <input id="type" type="hidden" name="type" value="single_task">        
       `;
 
-    const fullTodo = `<li><form class="todoItem" id="${todo.id}"><div>
+    const fullTodo = `<li order=${todo.order} status="${todo.status}"><form class="todoItem" id="${todo.id}"><div>
     ${output}
     </div>
     <div>
@@ -93,11 +96,15 @@ $(document).ready(function() {
       console.log('newID', newID);
 
       if (!$(".window li").length) {
+
         renderTodaysTodos(clientData);
+
       } else {
         const lastTodo = [data.find(item => item.id === newID - 1)];
         console.log(lastTodo);
+        
         renderTodaysTodos(lastTodo);
+      
       }
     
     });
@@ -133,7 +140,7 @@ $(document).ready(function() {
   //render newTodo Form
   const todoForm = function(formVal, window, orderCount)  {
     const renderTodoForm = `
-    <li>
+    <li order="${orderCount}">
       <form id ="todoForm">
         <input type=TEXT name="title" id="todo-text" value="${formVal}">
         <input type="hidden" name="id" value=${newID}>
@@ -207,7 +214,7 @@ $(document).ready(function() {
     let count = 0;
     
     if (count < orderNum) {
-      count += orderNum + 1;
+      count += orderNum - 1;
     }
     
     return count;
@@ -231,23 +238,39 @@ $(document).ready(function() {
 
   // when a checkbox is checked get it's id and crossoff the label
   $(".window").on("click", "input[type=checkbox]", function() {
+    const window = $(this).parent().parent().parent().parent().parent().attr("id");
+    //$(this).parent().parent().parent().appendTo("#today ul");
     let checkboxId = $(this).prop('id');
-    crossOffTodo(checkboxId);
+    
+    crossOffTodo(checkboxId, window);
+    
     const formData = $(`form[id="${checkboxId}"]`).serialize();
+    
     console.log(formData);
+    
     $.post("/todos", formData, () => {
     });
   });
   
-  //crossoff Todo
-  const crossOffTodo = function(id) {
+  //crossoff Todo and move it to the bottom
+  const crossOffTodo = function(id, window) {
+    
     if ($(`.todoItem div input:checkbox[id="${id}"]`).is(":checked")) {
+
       $(`.todoItem div label[for="checkbox${id}"]`).addClass("crossoff");
       $(`.todoItem div input#status`).val("complete");
+      $(`.todoItem#${id}`).parent().attr("status", "complete");
+      $(`.todoItem#${id}`).parent().appendTo("#today ul.complete");
+
     } else {
+
       $(`.todoItem div label[for="checkbox${id}"]`).removeClass("crossoff");
       $(`.todoItem div input#status`).val("incomplete");
+      $(`.todoItem#${id}`).parent().attr("status", "incomplete");
+      $(`.todoItem#${id}`).parent().appendTo("#today ul.incomplete");
+      sortLIList(window);
     }
+
   };
 
   loadTodos();
@@ -256,29 +279,47 @@ $(document).ready(function() {
   // HELPERS
   ////////////////////////////////////////////////
 
-  //Reorder todo's when a new one is created
-  //Run through all the todo's in a particular location
-  //Increase there order number
-  //push them to the DB
+  //Add 1 to all the todos.order and push to DB.
 
   const reorderTodos = function(windowLocation) {
+    
     for (let i in clientData) {
+
       if (clientData[i].location === windowLocation) {
         clientData[i].order += 1;
         const todoAsArray = [];
         let postString;
 
         for (let j in clientData[i]) {
-          console.log[j];
+
           todoAsArray.push(encodeURIComponent(j) + "=" + encodeURIComponent(clientData[i][j]));
           postString = todoAsArray.join("&");
+        
         }
-        console.log(postString);
+        
         $.post("/todos", postString, () => {});
+      
       }
+
     }
   };
 
+  //sort incomplete <li> elements based on the window where they belong
+  const sortLIList = function(window) {
+    
+    const listItems = $(`#${window} ul.incomplete li`);
+
+    listItems.sort(function(a,b) {
+      let aVal = parseInt($(a).attr('order'));
+      let bVal = parseInt($(b).attr('order'));
+  
+      return bVal - aVal;
+  
+    });
+
+    listItems.prependTo(`#${window} ul.incomplete`);
+  
+  };
 
 });
 
