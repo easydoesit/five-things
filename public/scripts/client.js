@@ -43,40 +43,34 @@ $(document).ready(function() {
   };
 
   //create and render todo
+  //TODO - Dry up this Function
   const createTodo = function(todo) {
-    
-    const statusCheck = function() {
-      let output;
-    
-      if (todo.status !== "complete") {
-        output = `<input id="${todo.id}" name="checkbox${todo.id}" type="checkbox" class="checkbox"></input>
-        <label for="checkbox${todo.id}" name="title" id="${todo.id}" value="${todo.title}">${todo.title}</label>
-        <input id="id" type ="hidden" name="id" value="${todo.id}">
-        <input id="text" type="hidden" name="text" value="${todo.title}">
-        <input id="location" type="hidden" name="location" value="${todo.location}">
-        <input id="order" type="hidden" name="order" value="${todo.order}">
-        <input id="status" type="hidden" name="status" value="incomplete">
-        <input id="created_at" type="hidden" name="created_at" value="${todo.created_at}">
-        <input id="type" type="hidden" name="type" value="single_task">        
-        `;
-      } else {
-        output = `<input id="${todo.id}" type="checkbox" name="checkbox${todo.id}" class="checkbox" checked></input>
-        <label for="checkbox${todo.id}" name="title" id="${todo.id}" value="${todo.title}" class="crossoff">${todo.title}</label>
-        <input id="id" type ="hidden" name="id" value="${todo.id}">
-        <input id="text" type="hidden" name="text" value="${todo.title}">
-        <input id="location" type="hidden" name="location" value="${todo.location}">
-        <input id="order" type="hidden" name="order" value="${todo.order}">
-        <input id="status" type="hidden" name="status" value="complete">
-        <input id="created_at" type="hidden" name="created_at" value="${todo.created_at}">
-        <input id="type" type="hidden" name="type" value="single_task">     
-        `;
-      }
-    
-      return output;
-    
-    };
+    let checked = "";
+    let crossoff = "";
+    let checkbox = `<input id="${todo.id}" name="checkbox${todo.id}" type="checkbox" class="checkbox" ${checked}></input>`;
+
+    if (todo.status === "complete") {
+      checked = "checked";
+      crossoff = "crossoff";
+    }
+
+    if (todo.location !== "today") {
+      checkbox = "";
+    }
+
+    const output = `${checkbox}
+    <label for="checkbox${todo.id}" name="title" id="${todo.id}" value="${todo.title}" class="${crossoff}">${todo.title}</label>
+    <input id="id" type ="hidden" name="id" value="${todo.id}">
+    <input id="text" type="hidden" name="text" value="${todo.title}">
+    <input id="location" type="hidden" name="location" value="${todo.location}">
+    <input id="order" type="hidden" name="order" value="${todo.order}">
+    <input id="status" type="hidden" name="status" value="${todo.status}">
+    <input id="created_at" type="hidden" name="created_at" value="${todo.created_at}">
+    <input id="type" type="hidden" name="type" value="single_task">        
+      `;
+
     const fullTodo = `<li><form class="todoItem" id="${todo.id}"><div>
-    ${statusCheck()}
+    ${output}
     </div>
     <div>
     <i class="fa fa-pencil" aria-hidden="true"></i>
