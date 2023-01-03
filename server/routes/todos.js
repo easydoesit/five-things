@@ -17,18 +17,18 @@ module.exports = function(dataHelpers) {
   });
 
   todoRoutes.post("/", function(req, res) {
-    if (!req.body.text) {
+    if (!req.body.title) {
       res.status(400).json({error: 'invalid request: no data in post body'});
       return;
     }
 
     const todo = {
       id: req.body.id,
-      title: req.body.text,
+      title: req.body.title,
       status: req.body.status,
       location: req.body.location,
-      type: "single_task",
-      order:req.body.order,
+      type: req.body.type,
+      order:parseInt(req.body.order),
       created_at: Date.now()//todo this needs to be made into an update function.
     };
 

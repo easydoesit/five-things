@@ -1,7 +1,6 @@
 $(document).ready(function() {
   let clientData;
   let newID;
-  let idList;
   let todayCount = 0;
   let tomorrowCount = 0;
   let nextDayCount = 0;
@@ -47,21 +46,22 @@ $(document).ready(function() {
   const createTodo = function(todo) {
     let checked = "";
     let crossoff = "";
-    let checkbox = `<input id="${todo.id}" name="checkbox${todo.id}" type="checkbox" class="checkbox" ${checked}></input>`;
 
     if (todo.status === "complete") {
       checked = "checked";
       crossoff = "crossoff";
     }
 
+    let checkbox = `<input id="${todo.id}" name="checkbox${todo.id}" type="checkbox" class="checkbox" ${checked}></input>`;
+
     if (todo.location !== "today") {
       checkbox = "";
     }
-
+    
     const output = `${checkbox}
     <label for="checkbox${todo.id}" name="title" id="${todo.id}" value="${todo.title}" class="${crossoff}">${todo.title}</label>
     <input id="id" type ="hidden" name="id" value="${todo.id}">
-    <input id="text" type="hidden" name="text" value="${todo.title}">
+    <input id="title" type="hidden" name="title" value="${todo.title}">
     <input id="location" type="hidden" name="location" value="${todo.location}">
     <input id="order" type="hidden" name="order" value="${todo.order}">
     <input id="status" type="hidden" name="status" value="${todo.status}">
@@ -91,8 +91,6 @@ $(document).ready(function() {
       console.log("clientData", clientData);
       newID = idCheck(clientData);
       console.log('newID', newID);
-      idList = getIDList();
-
 
       if (!$(".window li").length) {
         renderTodaysTodos(clientData);
@@ -137,11 +135,11 @@ $(document).ready(function() {
     const renderTodoForm = `
     <li>
       <form id ="todoForm">
-        <input type=TEXT name="text" id="todo-text" value="${formVal}">
+        <input type=TEXT name="title" id="todo-text" value="${formVal}">
         <input type="hidden" name="id" value=${newID}>
         <input type="hidden" name="location" value="${window}">
         <input type="hidden" name="order" value="${orderCount}">
-        <input type="hidden" name= status" value="incomplete">
+        <input type="hidden" name="status" value="incomplete">
         <button id="new-todo-button" type="submit" class="button"><i class="fa-solid fa-plus"></i></button>
         <button id="cancel-todo-button" type="link" class="button"><i class="fa-solid fa-minus"></i></button>
         </form>     
@@ -151,7 +149,7 @@ $(document).ready(function() {
   
   };
 
-  // remove any todo Form Elements if they are there.
+  // remove any todo Form Elements if they are there and return the value.
   const removeTodoForms = function() {
 
     if ($("#todoForm").length) {
@@ -186,19 +184,21 @@ $(document).ready(function() {
   });
 
   //submit a newTodo
-  $(".window").on("click", "#new-todo-button", (event) => {
+  $(".window").on("click", "#new-todo-button", function(event) {
     event.preventDefault();
-    
+    const windowLocation = $(this).parent().parent().parent().parent().attr("id");
     const formData = $("#todoForm").serialize();
     
     console.log(formData);
     
     $.post("/todos", formData, () => {
     });
-    
+
     $("#todoForm").parent().remove();
     
     loadTodos();
+
+    reorderTodos(windowLocation);
 
   });
 
@@ -229,19 +229,7 @@ $(document).ready(function() {
     return idNum;
   };
 
-  // get all the client Data Ids and put them in an array
-  // Check if you need this.
-  const getIDList = function() {
-    let list = [];
-    for (let i in clientData) {
-      list.push(clientData[i].id);
-    }
-    return list;
-  };
-  
-
   // when a checkbox is checked get it's id and crossoff the label
-  
   $(".window").on("click", "input[type=checkbox]", function() {
     let checkboxId = $(this).prop('id');
     crossOffTodo(checkboxId);
@@ -263,6 +251,34 @@ $(document).ready(function() {
   };
 
   loadTodos();
+
+  ////////////////////////////////////////////////
+  // HELPERS
+  ////////////////////////////////////////////////
+
+  //Reorder todo's when a new one is created
+  //Run through all the todo's in a particular location
+  //Increase there order number
+  //push them to the DB
+
+  const reorderTodos = function(windowLocation) {
+    for (let i in clientData) {
+      if (clientData[i].location === windowLocation) {
+        clientData[i].order += 1;
+        const todoAsArray = [];
+        let postString;
+
+        for (let j in clientData[i]) {
+          console.log[j];
+          todoAsArray.push(encodeURIComponent(j) + "=" + encodeURIComponent(clientData[i][j]));
+          postString = todoAsArray.join("&");
+        }
+        console.log(postString);
+        $.post("/todos", postString, () => {});
+      }
+    }
+  };
+
 
 });
 

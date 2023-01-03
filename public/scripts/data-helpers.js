@@ -14,12 +14,14 @@ module.exports = function makeDataHelpers(db) {
           match = true;
         }
       }
+
       //if the todo doesn't exist add it, otherwise updated it.
       if (match !== true) {
         db.push(todo);
       } else {
         const todoIndex = db.findIndex((obj => obj.id === todo.id));
         db[todoIndex].status = todo.status;
+        db[todoIndex].order = parseInt(todo.order);
         console.log("index", todoIndex);
 
       }
@@ -28,7 +30,7 @@ module.exports = function makeDataHelpers(db) {
 
     // get sorted Todos
     getTodos: function(callback) {
-      const sortedDB = db.sort((a, b) => a.order - b.order);
+      const sortedDB = db.sort((a, b) => b.order - a.order);
       callback(null, sortedDB);
     }
 
