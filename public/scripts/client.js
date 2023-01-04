@@ -114,7 +114,7 @@ $(document).ready(function() {
   // create a new todo FORM based on type and position
   $("#today h2 a").on("click", (event) => {
     event.preventDefault();
-    $("#today ul").append(todoForm(checkFormVal(removeTodoForms()), 'today', todayCount));
+    $("#today ul.incomplete").append(todoForm(checkFormVal(removeTodoForms()), 'today', todayCount));
   });
 
   $("#tomorrow h2 a").on("click", (event) => {

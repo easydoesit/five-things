@@ -11,7 +11,8 @@
   "main": "./server/index.js",
   "scripts": {
     "test": "test",
-    "start": "./node_modules/.bin/nodemon -L server.js --ignore ./data/"
+    "start": "node server/index.js",
+    "local": "./node_modules/.bin/nodemon -L server.js --ignore ./data/"
   },
   "repository": {
     "type": "git",
