@@ -4,6 +4,7 @@ import { getAuth } from "firebase/auth";
 const firebaseConfig = {
   apiKey: "AIzaSyD-DW5DiidWCQhTkiuwBeVdLZjJ34irwUg",
   authDomain: "things-58650.firebaseapp.com",
+  //authDomain: "localhost:3000",
   projectId: "things-58650",
   storageBucket: "things-58650.appspot.com",
   messagingSenderId: "747079287894",

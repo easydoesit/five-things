@@ -1,106 +1,97 @@
 import React, {useEffect, useState} from 'react';
+import { isMobile } from 'react-device-detect';
 import {FcGoogle} from 'react-icons/fc';
-import { DocumentData, collection, getDocs} from "firebase/firestore";
-import { CheckFirestoreInit } from './Utils/Firestore';
-import { signInWithPopup, GoogleAuthProvider,signOut, User } from "firebase/auth";
+//import { CheckFirestoreInit } from './Utils/Firestore';
+import { signInWithPopup, GoogleAuthProvider, User, onAuthStateChanged } from "firebase/auth";
 import { firebaseAuth } from './Utils/FirebaseConfig';
+import TodosToday from './components/todosToday';
 
-const db = CheckFirestoreInit();
+//const db = CheckFirestoreInit();
 
 function App() {
-  const [todos, setTodos] = useState<DocumentData[]>([]);
   const [user, setUser] = useState<User | null>(null);
 
   const provider = new GoogleAuthProvider();
 
-  const SIGN_IN_WITH_GOOGLE = () => {
+  const SIGN_IN_WITH_GOOGLE = async () => {
 
-    signInWithPopup(firebaseAuth, provider)
-    .then((result) => {
+    // if (!isMobile) { 
 
-      const user = result.user;
-
-      console.log("user >>> ", user);
-      setUser(user);
-
-    }).catch((error) => {
-      const errorCode = error.code;
-      alert(errorCode);
-    });
+      await signInWithPopup(firebaseAuth, provider)
+      .then((result) => {
+      
+        setUser(result.user);
+      
+      }).catch((error) => {
+        
+        alert(error);
+      
+      });    
 
   };
 
   const SIGN_OUT = () => {
-    signOut(firebaseAuth).then(() => {
+    firebaseAuth.signOut().then(() => {
+      
       setUser(null);
-      // Sign-out successful.
+
     }).catch((error) => {
-      // An error happened.
+
+      alert(error);
+
     });
   }
 
-  
-
-
   useEffect(() => {
-    let ignore = false; // needed to only run once in dev
-    // Initialize the Firebase Fires with the provided configuration
-    if (db) {
-    // Function to fetch data from the database
-      const fetchData = async () => {
-        const querySnapshot = await getDocs(collection(db, 'Todos'));
-        if (!ignore) {
-          querySnapshot.forEach((doc) => {
-            setTodos(oldTodos => [...oldTodos, doc.data()]);
-          })
-        }
+
+    async function checkLoggedIn() {
+      onAuthStateChanged(firebaseAuth, (user) => {
+      if (user) {
+        setUser(user);
+      }
+      
+    });
     };
-  
-    fetchData();
 
-    return () => {
-      ignore = true;
-    }
-
-    }
- 
-  }, []);
+    checkLoggedIn();
+  }, [user])
 
 
   return (
-
+  
   //Login
     <>
+    <meta name="keywords" content="React, JavaScript, semantic markup, html" />
 
       { !user && 
-        <div className='googleButtonHolder'>
+      <div className='startScreen'>
+        <img src={process.env.PUBLIC_URL + '/images/5Things_logo.png'} alt='5Thing Logo' className='logoStartScreen'/>
             <button onClick={SIGN_IN_WITH_GOOGLE} className='googleButton'> 
             Sign In With Google
             <FcGoogle size={22} className='icon' />
           </button>
+          {user}
         </div>
       }
 
-{/* App */}
+    {/* App */}
       
-{
-        user &&
+      { user &&
         <div>
-        <button onClick={SIGN_OUT} className='logout'>
-        SignOut
-        
-      </button>
-
-
-
-      <h1>Data from database:</h1>
-      <ol>
-        {todos.map((item, index) => (
-          <li key={index}>{item.Action}</li>
-        ))}
-      </ol>
-      </div>
-       }
+          <div>
+            <button onClick={SIGN_OUT} className='logout'>
+            SignOut
+            
+            </button>
+          </div>
+      
+          <div>
+            <TodosToday 
+            user = {user}
+            />
+          </div>
+        </div>
+      }
     </>
   );
 }

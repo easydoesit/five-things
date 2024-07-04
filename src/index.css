@@ -3,6 +3,9 @@ body,
 #app,
 #app > div {
   height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: env(safe-area-inset);
 }
 
 body {
@@ -16,6 +19,9 @@ body {
 
 #root {
   height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 code {
@@ -23,18 +29,44 @@ code {
     monospace;
 }
 
-.googleButtonHolder {
+@media only screen and (max-width: 600px) {
+  .logoStartScreen {
+    width: 280px;
+    height: 152px;
+    margin-bottom: 96px;
+  }
+}
+
+@media only screen and (min-width: 600px) {
+  .logoStartScreen {
+    width: 424px;
+    height: 230px;
+    margin-bottom: 32px;
+  }
+}
+
+.startScreen {
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-color: blue;
+  width: 100%;
+  background-color: #ff1014;
 }
 
 .googleButton {
   display: flex;
-  margin: auto;
-
+  justify-content: center;
+  align-items: center;
   width: 200px;
   height: 40px;
+  border: none;
+  border-radius: 12px;
+  background-color: black;
+  color: #fff;
+}
+
+.icon {
+  margin-left: 8px;
 }
