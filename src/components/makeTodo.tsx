@@ -5,26 +5,53 @@ import { User} from "firebase/auth";
 
 const db = CheckFirestoreInit();
 
-type makeTodoOptions = 'today' | 'tomorrow' | 'week' | 'overdue'
-
 interface makeTodoI {
   name:string;
-  day:makeTodoOptions;
+  day:makeTodoDayOptions;
   count:number;
   user:User | null;
 }
 
 export default function MakeTodo({day, count, user}:makeTodoI) {
-  const toDoInitialState:makeTodoI = {
-    name: "",
-    day:day,
-    count:count + 1,
-    user:user,
-  }
+  console.log('startday: ', day);
+  const maxPerDay = 6;
 
-
+    const toDoInitialState:makeTodoI = {
+      name: "",
+      day:day,
+      count:count,
+      user:user,
+    }
+  
   const [fieldInfo, setFieldInfo] = useState<makeTodoI>(toDoInitialState);
   const [makeTodo, setMakeTodo] = useState<Boolean>(false);
+
+  const days:makeTodoDayOptions[] = ['today', 'tomorrow', 'week'];
+
+  if (fieldInfo.day !== 'week') {
+
+    if (count >= maxPerDay) {
+      const index = days.findIndex(x => x === fieldInfo.day);
+      fieldInfo.day = days[index + 1]
+    }
+
+  }
+
+  const  defaultRadio = (day:makeTodoDayOptions) => {
+    if (day === fieldInfo.day) {
+      return true;
+    }
+  }
+  
+  
+
+  const disabledRadio = (daycount:number, pickedDay:string) => {
+    if (daycount >= maxPerDay && pickedDay === fieldInfo.day) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
   const onFieldChange = (event: ChangeEvent<HTMLInputElement>) => {
     let value: typeof fieldInfo[keyof typeof fieldInfo] = event.target.value;
@@ -32,10 +59,9 @@ export default function MakeTodo({day, count, user}:makeTodoI) {
   }
 
   const onOptionChange = (event: ChangeEvent<HTMLInputElement>):void => {
-    let value = event.target.value as makeTodoOptions;
+    let value = event.target.value as makeTodoDayOptions;
     setFieldInfo({...fieldInfo, day: value});
   }
-
 
   const handleMakeTodo = async(event:SyntheticEvent<HTMLFormElement, SubmitEvent>) =>  {
     event.preventDefault();
@@ -77,7 +103,7 @@ export default function MakeTodo({day, count, user}:makeTodoI) {
           dateDue: setDate(new Date()),
           dateUpdated:serverTimestamp(),
           name: fieldInfo.name,
-          order: 1,
+          order: count,
           owner: user.uid,
         })
 
@@ -111,15 +137,26 @@ export default function MakeTodo({day, count, user}:makeTodoI) {
           </label>
 
           <div className='makeTodoRadioButtons'>
-          <input type="radio" onChange={onOptionChange} name="today" value='today' checked={fieldInfo.day === 'today'} /> Today
-          <input type="radio" onChange={onOptionChange} name="tomorrow" value='tomorrow' checked={fieldInfo.day === 'tomorrow'} /> Tomorrow
-          <input type='radio' onChange={onOptionChange} name='week' value='week' checked={fieldInfo.day === 'week'} />Week
+            {
+              days.map((day, index) => ( 
+              <>
+              <input key={index} type="radio" onChange={onOptionChange} name='days' value={day}  disabled={false} defaultChecked={defaultRadio(day)}/> {day.charAt(0).toUpperCase() + day.slice(1)}
+              </>
+              ))
+            }
+          
+
+
+          {/* <input type="radio" onChange={onOptionChange} name="today" value='today' checked={defaultcheckedToday} disabled={disableToday} /> Today
+          <input type="radio" onChange={onOptionChange} name="tomorrow" value='tomorrow' checked={defaultcheckedTomorrow} disabled={disableTomorrow}/> Tomorrow
+          <input type='radio' onChange={onOptionChange} name='week' value='week' checked={defaultcheckedWeek} />Week */}
           </div>
 
           <button type='submit'>Add</button>
         </form>
       </div>
     }
+   
     <div>
       {`${fieldInfo.count} ${fieldInfo.name} ${fieldInfo.user?.uid} ${fieldInfo.day}`}
     </div>
