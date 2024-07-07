@@ -6,6 +6,7 @@ import { DocumentData, collection, getDocs, orderBy, query, where, limit, QueryS
 import { signInWithPopup, GoogleAuthProvider, User, onAuthStateChanged } from "firebase/auth";
 import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
+import MakeTodo from './components/makeTodo';
 
 const db = CheckFirestoreInit();
 
@@ -66,7 +67,7 @@ function App() {
     let ignore = false; // needed to only run once in dev
 
     if (db && user) {
-
+    setAllTodos([]);
     // Function to fetch data from the database
       const fetchData = async () => {
         try {
@@ -85,7 +86,7 @@ function App() {
         if (!ignore && querySnapshot) {//this is for the repeat in dev mode
 
           querySnapshot.forEach((doc) => {
-
+  
             setAllTodos((oldAllTodos) => [...oldAllTodos, doc.data()]);
           
           });
@@ -97,41 +98,51 @@ function App() {
  
   }, [user]);
 
-  useEffect(() => {    
-    let ignore = false; // needed to only run once in dev
+  useEffect(() => {
+    setCompleteTodos([]);
+    setOverDueTodos([]);
+    setTodaysTodos([]);
+    setTomorrowsTodos([]);
+    setWeeksTodos([]);
     
     const currentDay = new Date();
-        currentDay.setHours(0,0,0,0);
+    currentDay.setHours(0,0,0,0);
 
-        allTodos.forEach((todo) => {
+    const nextDay = new Date();
+    nextDay.setHours(0,0,0,0);
+    nextDay.setTime(nextDay.getTime() + (24*60*60*1000));
+    
+    const thisWeek = new Date();
+    thisWeek.setHours(0,0,0,0);
+    thisWeek.setTime(thisWeek.getTime() + (5*(24*60*60*1000)));
+    
 
-          if(todo.dateDue < currentDay && todo.complete == false) {
-            
-            setOverDueTodos((oldOverDueTodos) => [...oldOverDueTodos, todo]);
+      allTodos.forEach((todo) => {
+        const dueDate = todo.dateDue.toDate();
+      
+        if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
           
-          } else if(todo.dateDue ===  currentDay && todo.complete == false) {
-            
-            setTodaysTodos((oldTodaysTodos) => [...oldTodaysTodos, todo]);
+          setOverDueTodos((oldOverDueTodos) => [...oldOverDueTodos, todo]);
+        
+        } else if(dueDate.getTime() ===  currentDay.getTime() && todo.complete === false) {
           
-          } else if(todo.dueDate >  currentDay && todo.dueDate < currentDay.getDate() + 2 && todo.complete == false) {
-            
-            setTomorrowsTodos((oldTomorrowsTodos) => [...oldTomorrowsTodos, todo]);
+          setTodaysTodos((oldTodaysTodos) => [...oldTodaysTodos, todo]);
+        
+        } else if(dueDate.getTime() === nextDay.getTime() && todo.complete === false) {
           
-          } else if(todo.dueDate >  currentDay.getDate() +2 && todo.complete == false) {
-            
-            setWeeksTodos((oldWeeksTodos) => [...oldWeeksTodos, todo]);
+          setTomorrowsTodos((oldTomorrowsTodos) => [...oldTomorrowsTodos, todo]);
+        
+        } else if(dueDate.getTime() >  nextDay.getTime() && todo.complete === false) {
           
-          } else if(todo.complete == true) {
-            
-            setCompleteTodos((oldCompleteTodos) => [...oldCompleteTodos, todo]);
+          setWeeksTodos((oldWeeksTodos) => [...oldWeeksTodos, todo]);
+        
+        } else if(todo.complete === true) {
           
-          }
-
-        });
-
-        return () => {
-          ignore = true;
+          setCompleteTodos((oldCompleteTodos) => [...oldCompleteTodos, todo]);
+        
         }
+
+      });       
   
   },[allTodos]);
 
@@ -163,6 +174,14 @@ function App() {
             
             </button>
           </div>
+          <div>
+         
+      <MakeTodo 
+        user ={user}
+        todaysTodos = {todaysTodos}
+        tomorrowsTodos = {tomorrowsTodos}
+      /> 
+    </div>
           <div>
             <TodosList 
             key={1}
@@ -197,7 +216,6 @@ function App() {
             day = 'week'
             todos={weeksTodos}
             user = {user}
-
             />
           </div>
           <div>

@@ -1,56 +1,79 @@
-import React, {ChangeEvent, useEffect, useState, SyntheticEvent} from 'react';
+import React, {ChangeEvent, useState, SyntheticEvent} from 'react';
 import { CheckFirestoreInit } from '../Utils/Firestore';
-import { addDoc, collection, serverTimestamp,} from "firebase/firestore";
+import { DocumentData, addDoc, collection, serverTimestamp,} from "firebase/firestore";
 import { User} from "firebase/auth";
 
 const db = CheckFirestoreInit();
 
-interface makeTodoI {
-  name:string;
+interface MakeTodoI {
+  user:User | null;
+  todaysTodos: DocumentData[];
+  tomorrowsTodos: DocumentData[];
+}
+
+interface TodoFieldI {
+  name:string | undefined;
   day:makeTodoDayOptions;
   count:number;
   user:User | null;
 }
 
-export default function MakeTodo({day, count, user}:makeTodoI) {
-  console.log('startday: ', day);
-  const maxPerDay = 6;
-
-    const toDoInitialState:makeTodoI = {
+export default function MakeTodo({user, todaysTodos, tomorrowsTodos}:MakeTodoI) {
+    
+  const toDoInitialState:TodoFieldI = {
       name: "",
-      day:day,
-      count:count,
+      day:'today',
+      count:0,
       user:user,
     }
   
-  const [fieldInfo, setFieldInfo] = useState<makeTodoI>(toDoInitialState);
-  const [makeTodo, setMakeTodo] = useState<Boolean>(false);
+  const [fieldInfo, setFieldInfo] = useState<TodoFieldI>(toDoInitialState);//fieldvalues
+  const [makeTodo, setMakeTodo] = useState<Boolean>(false);//button
+
+  const maxPerDay = 6;
 
   const days:makeTodoDayOptions[] = ['today', 'tomorrow', 'week'];
-
-  if (fieldInfo.day !== 'week') {
-
-    if (count >= maxPerDay) {
-      const index = days.findIndex(x => x === fieldInfo.day);
-      fieldInfo.day = days[index + 1]
-    }
-
-  }
+  let defaultDay:makeTodoDayOptions = 'today';
 
   const  defaultRadio = (day:makeTodoDayOptions) => {
-    if (day === fieldInfo.day) {
+
+    if(defaultDay === 'today' && day === 'today' && todaysTodos.length >= maxPerDay) {
+      defaultDay = 'tomorrow'
+      return false;
+    } else if(defaultDay === 'today' && day === 'today' && todaysTodos.length < maxPerDay) {
       return true;
     }
+    
+    if(defaultDay === 'tomorrow' && day === 'tomorrow' && tomorrowsTodos.length >= maxPerDay) {
+      defaultDay = 'week'
+      return false;
+    } else if(defaultDay === 'tomorrow' && day === 'tomorrow' && tomorrowsTodos.length < maxPerDay) {
+      return true;
+    }
+    
+    if(defaultDay === 'week' && day === 'week') {
+      console.log('Week is true');
+      return true;
+    } 
   }
   
-  
-
-  const disabledRadio = (daycount:number, pickedDay:string) => {
-    if (daycount >= maxPerDay && pickedDay === fieldInfo.day) {
+  const disableRadio = (day:makeTodoDayOptions) => {
+    
+    if(day === 'today' && todaysTodos.length >= maxPerDay) {
       return true;
-    } else {
+    } else if(defaultDay === 'today' && day === 'today' && todaysTodos.length < maxPerDay) {
       return false;
     }
+    
+    if(day === 'tomorrow' && tomorrowsTodos.length >= maxPerDay) {
+      return true;
+    } else if(day === 'tomorrow' && tomorrowsTodos.length < maxPerDay) {
+      return false;
+    }
+    
+    if(day === 'week') {
+      return false;
+    } 
   }
 
   const onFieldChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -65,6 +88,21 @@ export default function MakeTodo({day, count, user}:makeTodoI) {
 
   const handleMakeTodo = async(event:SyntheticEvent<HTMLFormElement, SubmitEvent>) =>  {
     event.preventDefault();
+
+    const setTodoCount = (day:makeTodoDayOptions) =>{
+      if (day === 'today') {
+        return todaysTodos.length;
+      }
+
+      if (day === 'tomorrow') {
+        return tomorrowsTodos.length;
+      }
+
+      if (day === 'week') {
+        return 0;
+      }
+
+    }
 
     if (!fieldInfo.name) {
       alert("You need to input your todo.");
@@ -103,7 +141,7 @@ export default function MakeTodo({day, count, user}:makeTodoI) {
           dateDue: setDate(new Date()),
           dateUpdated:serverTimestamp(),
           name: fieldInfo.name,
-          order: count,
+          order: setTodoCount(fieldInfo.day),
           owner: user.uid,
         })
 
@@ -140,16 +178,14 @@ export default function MakeTodo({day, count, user}:makeTodoI) {
             {
               days.map((day, index) => ( 
               <>
-              <input key={index} type="radio" onChange={onOptionChange} name='days' value={day}  disabled={false} defaultChecked={defaultRadio(day)}/> {day.charAt(0).toUpperCase() + day.slice(1)}
+              { <div className={disableRadio(day) ? "makeTodoButtonTransparent" : 'makeTodoButtonOpaque'}>
+                  <input key={index} type="radio" onChange={onOptionChange} name='days' value={day}  defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {day.charAt(0).toUpperCase() + day.slice(1)}
+                </div>
+              }
               </>
               ))
             }
-          
 
-
-          {/* <input type="radio" onChange={onOptionChange} name="today" value='today' checked={defaultcheckedToday} disabled={disableToday} /> Today
-          <input type="radio" onChange={onOptionChange} name="tomorrow" value='tomorrow' checked={defaultcheckedTomorrow} disabled={disableTomorrow}/> Tomorrow
-          <input type='radio' onChange={onOptionChange} name='week' value='week' checked={defaultcheckedWeek} />Week */}
           </div>
 
           <button type='submit'>Add</button>

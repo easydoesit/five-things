@@ -18,14 +18,6 @@ export default function TodosList({todos, title, day, user}:TodosListI) {
   return (
     <>
       <h1>{title}</h1>
-      {(day !== 'complete' && day !== 'overdue') &&
-      <MakeTodo 
-      name = ""
-      user ={user}
-      day = {day}
-      count = {todos.length}
-      /> 
-    }
       <ol>
         {todos.map((item, index) => (
           <li key={index}>{item.name}</li>

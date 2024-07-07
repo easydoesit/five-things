@@ -70,3 +70,7 @@ code {
 .icon {
   margin-left: 8px;
 }
+
+.makeTodoButtonTransparent {
+  opacity: 0.5;
+}
