@@ -1,10 +1,5 @@
-import React, {useEffect, useState} from 'react';
-import { CheckFirestoreInit } from '../Utils/Firestore';
 import { User} from "firebase/auth";
-import MakeTodo from './makeTodo';
 import { DocumentData} from "firebase/firestore";
-
-const db = CheckFirestoreInit();
 
 interface TodosListI {
   todos:DocumentData[]; 

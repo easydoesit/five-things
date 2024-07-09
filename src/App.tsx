@@ -1,8 +1,7 @@
 import React, {useEffect, useState} from 'react';
-import { isMobile } from 'react-device-detect';
 import {FcGoogle} from 'react-icons/fc';
 import { CheckFirestoreInit } from './Utils/Firestore';
-import { DocumentData, collection, getDocs, orderBy, query, where, limit, QuerySnapshot} from "firebase/firestore";
+import { DocumentData, collection, getDocs, orderBy, query, where, limit} from "firebase/firestore";
 import { signInWithPopup, GoogleAuthProvider, User, onAuthStateChanged } from "firebase/auth";
 import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
@@ -48,6 +47,30 @@ function App() {
       alert(error);
 
     });
+  }
+
+  const updateTodoList = (list:makeTodoDayOptions, todo:DocumentData) => {
+    
+    if (list === 'today') {
+    setTodaysTodos((oldTodaysTodos) => [...oldTodaysTodos, todo]);
+    }
+
+    if (list === 'tomorrow') {
+    setTomorrowsTodos((oldTomorrowsTodos) => [...oldTomorrowsTodos, todo])
+    }
+
+    if (list === 'week') {
+      setWeeksTodos((oldWeeksTodos) => [...oldWeeksTodos, todo]);
+    }
+
+    if (list === 'complete') {
+      setCompleteTodos((oldCompleteTodos) => [...oldCompleteTodos, todo]);
+    }
+
+    if (list === 'overdue') {
+      setOverDueTodos((oldOverDueTodos) => [...oldOverDueTodos, todo]);
+    }
+
   }
 
   useEffect(() => {
@@ -122,23 +145,23 @@ function App() {
       
         if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
           
-          setOverDueTodos((oldOverDueTodos) => [...oldOverDueTodos, todo]);
+          updateTodoList('overdue', todo);
         
         } else if(dueDate.getTime() ===  currentDay.getTime() && todo.complete === false) {
           
-          setTodaysTodos((oldTodaysTodos) => [...oldTodaysTodos, todo]);
+          updateTodoList('today', todo);
         
         } else if(dueDate.getTime() === nextDay.getTime() && todo.complete === false) {
           
-          setTomorrowsTodos((oldTomorrowsTodos) => [...oldTomorrowsTodos, todo]);
+          updateTodoList('tomorrow', todo);
         
         } else if(dueDate.getTime() >  nextDay.getTime() && todo.complete === false) {
           
-          setWeeksTodos((oldWeeksTodos) => [...oldWeeksTodos, todo]);
+          updateTodoList('week', todo);
         
         } else if(todo.complete === true) {
           
-          setCompleteTodos((oldCompleteTodos) => [...oldCompleteTodos, todo]);
+          updateTodoList('complete', todo);
         
         }
 
@@ -180,6 +203,7 @@ function App() {
         user ={user}
         todaysTodos = {todaysTodos}
         tomorrowsTodos = {tomorrowsTodos}
+        updateTodo = {updateTodoList}
       /> 
     </div>
           <div>

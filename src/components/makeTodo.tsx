@@ -9,6 +9,7 @@ interface MakeTodoI {
   user:User | null;
   todaysTodos: DocumentData[];
   tomorrowsTodos: DocumentData[];
+  updateTodo(list:makeTodoDayOptions, todo: DocumentData):void;
 }
 
 interface TodoFieldI {
@@ -18,7 +19,7 @@ interface TodoFieldI {
   user:User | null;
 }
 
-export default function MakeTodo({user, todaysTodos, tomorrowsTodos}:MakeTodoI) {
+export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}:MakeTodoI) {
     
   const toDoInitialState:TodoFieldI = {
       name: "",
@@ -52,7 +53,6 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos}:MakeTodoI) 
     }
     
     if(defaultDay === 'week' && day === 'week') {
-      console.log('Week is true');
       return true;
     } 
   }
@@ -135,15 +135,20 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos}:MakeTodoI) 
         };
       }
 
-      try{
-        await addDoc(collection(db, 'Todos'), {
-          complete:false,
-          dateDue: setDate(new Date()),
-          dateUpdated:serverTimestamp(),
-          name: fieldInfo.name,
-          order: setTodoCount(fieldInfo.day),
-          owner: user.uid,
-        })
+      const todo = {
+        complete:false,
+        dateDue: setDate(new Date()),
+        dateUpdated:serverTimestamp(),
+        name: fieldInfo.name,
+        order: setTodoCount(fieldInfo.day),
+        owner: user.uid,
+      }
+
+      updateTodo(fieldInfo.day, todo);
+
+      try {
+        
+        await addDoc(collection(db, 'Todos'), todo);
 
       } catch (error) {
 
@@ -177,12 +182,12 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos}:MakeTodoI) 
           <div className='makeTodoRadioButtons'>
             {
               days.map((day, index) => ( 
-              <>
-              { <div className={disableRadio(day) ? "makeTodoButtonTransparent" : 'makeTodoButtonOpaque'}>
-                  <input key={index} type="radio" onChange={onOptionChange} name='days' value={day}  defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {day.charAt(0).toUpperCase() + day.slice(1)}
+              <div key={index}>
+              { <div  className={disableRadio(day) ? "makeTodoButtonTransparent" : 'makeTodoButtonOpaque'}>
+                  <input type="radio" onChange={onOptionChange} name='days' value={day}  defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {day.charAt(0).toUpperCase() + day.slice(1)}
                 </div>
               }
-              </>
+              </div>
               ))
             }
 
@@ -193,10 +198,6 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos}:MakeTodoI) 
       </div>
     }
    
-    <div>
-      {`${fieldInfo.count} ${fieldInfo.name} ${fieldInfo.user?.uid} ${fieldInfo.day}`}
-    </div>
-
     </>
 
   )
