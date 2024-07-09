@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {FcGoogle} from 'react-icons/fc';
 import { CheckFirestoreInit } from './Utils/Firestore';
-import { DocumentData, collection, getDocs, orderBy, query, where, limit} from "firebase/firestore";
+import { DocumentData, collection, getDocs, orderBy, query, where, limit, QuerySnapshot, serverTimestamp, Timestamp} from "firebase/firestore";
 import { signInWithPopup, GoogleAuthProvider, User, onAuthStateChanged } from "firebase/auth";
 import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
@@ -11,7 +11,8 @@ const db = CheckFirestoreInit();
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
-  const [allTodos, setAllTodos] = useState<DocumentData[]>([]);
+  const [firstIncompleteTodos, setFirstIncompleteTodos] = useState<DocumentData[]>([]);
+  const [initialCompleteTodos, setInitialCompleteTodos] = useState<DocumentData[]>([]);
   const [todaysTodos, setTodaysTodos] = useState<DocumentData[]>([]);
   const [tomorrowsTodos, setTomorrowsTodos] = useState<DocumentData[]>([]);
   const [weeksTodos, setWeeksTodos] = useState<DocumentData[]>([]);
@@ -90,39 +91,72 @@ function App() {
     let ignore = false; // needed to only run once in dev
 
     if (db && user) {
-    setAllTodos([]);
+    setFirstIncompleteTodos([]);
+    setInitialCompleteTodos([]);
     // Function to fetch data from the database
-      const fetchData = async () => {
+      const fetchDataIncomplete = async () => {
+        
         try {
-          const q = query(collection(db, 'Todos'), where("owner", "==", user.uid), orderBy("order", "asc"), limit(1000));
-          const querySnapshot = await getDocs(q);
+          const queryIncomplete = query(collection(db, 'Todos'), where("owner", "==", user.uid), where("complete", "==", false));
+          const querySnapshot = await getDocs(queryIncomplete);
 
           return querySnapshot;
 
         } catch (error) {
           console.log(error);
         }
+
       };
+
+      const fetchDataComplete = async () => {
+
+        try {
+          const today = new Date();
+          const dateLimit = new Date(new Date().setDate(today.getDate() - 90));
+          const queryComplete = query(collection(db,'Todos'), where ('owner', '==', user.uid), where('complete', '==', true), where('dateUpdated', '>=', dateLimit), limit(700));
+          const querySnapshot = await getDocs(queryComplete);
+
+          return querySnapshot;
+          
+
+        } catch (error) {
+          console.log(error);
+        }
+
+      }
+      
   
-      fetchData().then((querySnapshot) => {
+      fetchDataIncomplete().then((querySnapshot) => {
 
         if (!ignore && querySnapshot) {//this is for the repeat in dev mode
 
           querySnapshot.forEach((doc) => {
-  
-            setAllTodos((oldAllTodos) => [...oldAllTodos, doc.data()]);
+
+            setFirstIncompleteTodos((oldFirstIncompleteTodos) => [...oldFirstIncompleteTodos, doc.data()]);
           
           });
 
         }
       });
 
+      fetchDataComplete().then((querySnapshot) => {
+        if(!ignore && querySnapshot) {
+
+          querySnapshot.forEach((doc) => {
+
+            setInitialCompleteTodos((oldInitialCompleteTodos) => [...oldInitialCompleteTodos, doc.data()]);
+
+          });
+
+        }
+
+      })
+
     }
  
   }, [user]);
 
   useEffect(() => {
-    setCompleteTodos([]);
     setOverDueTodos([]);
     setTodaysTodos([]);
     setTomorrowsTodos([]);
@@ -140,7 +174,7 @@ function App() {
     thisWeek.setTime(thisWeek.getTime() + (5*(24*60*60*1000)));
     
 
-      allTodos.forEach((todo) => {
+      firstIncompleteTodos.forEach((todo) => {
         const dueDate = todo.dateDue.toDate();
       
         if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
@@ -159,15 +193,23 @@ function App() {
           
           updateTodoList('week', todo);
         
-        } else if(todo.complete === true) {
-          
-          updateTodoList('complete', todo);
-        
-        }
+        } 
 
       });       
   
-  },[allTodos]);
+  },[firstIncompleteTodos]);
+
+  useEffect(() => {
+    setCompleteTodos([]);
+
+    initialCompleteTodos.forEach((todo) =>
+    {
+      updateTodoList('complete', todo);
+    }
+    )
+
+  }, [initialCompleteTodos]);
+
 
 
   return (
