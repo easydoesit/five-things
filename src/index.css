@@ -1,5 +1,131 @@
 html,
 body,
+div,
+span,
+applet,
+object,
+iframe,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+blockquote,
+pre,
+a,
+abbr,
+acronym,
+address,
+big,
+cite,
+code,
+del,
+dfn,
+em,
+img,
+ins,
+kbd,
+q,
+s,
+samp,
+small,
+strike,
+strong,
+sub,
+sup,
+tt,
+var,
+b,
+u,
+i,
+center,
+dl,
+dt,
+dd,
+ol,
+ul,
+li,
+fieldset,
+form,
+label,
+legend,
+table,
+caption,
+tbody,
+tfoot,
+thead,
+tr,
+th,
+td,
+article,
+aside,
+canvas,
+details,
+embed,
+figure,
+figcaption,
+footer,
+header,
+hgroup,
+menu,
+nav,
+output,
+ruby,
+section,
+summary,
+time,
+mark,
+audio,
+video {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 100%;
+  font: inherit;
+  vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+article,
+aside,
+details,
+figcaption,
+figure,
+footer,
+header,
+hgroup,
+menu,
+nav,
+section {
+  display: block;
+}
+body {
+  line-height: 1;
+}
+ol,
+ul {
+  list-style: none;
+}
+blockquote,
+q {
+  quotes: none;
+}
+blockquote:before,
+blockquote:after,
+q:before,
+q:after {
+  content: "";
+  content: none;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+/* End reset styles */
+
+html,
+body,
 #app,
 #app > div {
   height: 100%;
@@ -71,6 +197,185 @@ code {
   margin-left: 8px;
 }
 
+.menuTop {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 8px;
+  height: 36px;
+  background-color: #ff1014;
+}
+
+.menuTopLogo {
+  height: 36px;
+}
+
+.buttonLogout {
+  background-color: black;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 0px 16px;
+  background: black;
+}
+
+.makeTodoHolder {
+  display: flex;
+  flex-direction: row;
+  justify-content: stretch;
+  padding: 16px 1% 16px 1%;
+  background-color: black;
+  height: 70px;
+}
+
+.makeTodoButton {
+  background-color: #00b995;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 0px 16px;
+  font-size: 24px;
+  width: 100%;
+}
+
+.makeTodoFormWrapper {
+  display: flex;
+  justify-content: stretch;
+  align-content: stretch;
+  color: white;
+  font-size: 12px;
+  width: 100%;
+}
+
+.makeTodoForm {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.makeTodoColumn {
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+}
+
+.makeTodoTextBox {
+  height: 32px;
+  border-radius: 12px 0px 0px 12px;
+  border: none;
+  font-size: 16px;
+  padding-left: 8px;
+  background: rgb(255, 255, 255);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(186, 236, 226, 1) 100%
+  );
+}
+
+.makeTodoRadioButtonsGroup {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  font-size: 12px;
+  padding-right: 8px;
+  padding-top: 12px;
+}
+
+.makeTodoRadioButtonsGroup input {
+  -ms-transform: scale(1); /* IE 9 */
+  -webkit-transform: scale(1); /* Chrome, Safari, Opera */
+  transform: scale(1);
+  border: none;
+  stroke: none;
+  accent-color: #00b995;
+}
+
 .makeTodoButtonTransparent {
   opacity: 0.5;
+}
+
+.makeTodoAddButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #00b995;
+  color: white;
+  border: none;
+  width: 20%;
+  height: 100%;
+  border: none;
+  border-radius: 0px 12px 12px 12px;
+  font-size: 24px;
+}
+
+.cancelButtonHolder {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 8%;
+}
+
+.cancelButton {
+  border: none;
+  background-color: #ff1014;
+  border-radius: 12px;
+  width: 75%;
+  height: 75%;
+}
+
+.cancelButton img {
+  width: 50%;
+}
+
+.listMenuButtons {
+  width: 100%;
+  height: 40px;
+  display: flex;
+  flex-direction: row;
+}
+
+.listMenuButtons button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: none;
+  height: 100%;
+  color: white;
+  border-radius: 0px;
+  font-size: 12px;
+  flex-basis: 0;
+  flex-grow: 1;
+}
+
+.buttonoverdue {
+  background-color: #ff1014;
+}
+
+.buttontoday {
+  background-color: #00b995;
+}
+
+.buttontomorrow {
+  background-color: rgb(135, 222, 235);
+}
+
+.buttonweek {
+  background-color: pink;
+}
+
+.buttoncomplete {
+  background-color: gold;
+}
+
+.listHolder {
+  display: block;
+  width: 100%;
+  padding: 8px 1%;
+  background-color: yellow;
+  overflow: hidden;
+}
+
+.listHolder {
+  width: 100%;
 }

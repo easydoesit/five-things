@@ -2,6 +2,7 @@ import React, {ChangeEvent, useState, SyntheticEvent} from 'react';
 import { CheckFirestoreInit } from '../Utils/Firestore';
 import { DocumentData, addDoc, collection, serverTimestamp,} from "firebase/firestore";
 import { User} from "firebase/auth";
+import firstLetterToUpperCase from '../Utils/upperCase';
 
 const db = CheckFirestoreInit();
 
@@ -29,7 +30,6 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}
     }
   
   const [fieldInfo, setFieldInfo] = useState<TodoFieldI>(toDoInitialState);//fieldvalues
-  const [makeTodo, setMakeTodo] = useState<Boolean>(false);//button
 
   const maxPerDay = 6;
 
@@ -162,43 +162,42 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}
 
   return (
 
-    <>
-  
-    { !makeTodo ?
-      <button onClick={() => setMakeTodo(true)} className='makeTodoButton'>Add A Todo</button>
-      : 
+    <div className='makeTodoHolder'>
+
+      
       <div className='makeTodoFormWrapper'>
         <form className='makeTodoForm' name="make_todo" onSubmit={handleMakeTodo}>
-          <label>Add Your Todo
-          <input className='makeTodoTextBox'
-          id='name'
-          type='text'
-          placeholder='What you Gonna Do?'
-          value={fieldInfo.name}
-          onChange={onFieldChange}
-          />  
-          </label>
+          <div className='makeTodoColumn'>
+            <input className='makeTodoTextBox'
+            id='name'
+            type='text'
+            placeholder='What you Gonna Do?'
+            value={fieldInfo.name}
+            onChange={onFieldChange}
+            />  
+          
 
-          <div className='makeTodoRadioButtons'>
-            {
-              days.map((day, index) => ( 
-              <div key={index}>
-              { <div  className={disableRadio(day) ? "makeTodoButtonTransparent" : 'makeTodoButtonOpaque'}>
-                  <input type="radio" onChange={onOptionChange} name='days' value={day}  defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {day.charAt(0).toUpperCase() + day.slice(1)}
+          <div className='makeTodoRadioButtonsGroup'>
+              {
+                days.map((day, index) => ( 
+                <div key={index}>
+                { <label className={disableRadio(day) ? "makeTodoButtonTransparent" : 'makeTodoButtonOpaque'}>
+                    <input type="radio" onChange={onOptionChange} name='days' value={day}  defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {firstLetterToUpperCase(day)}
+                  </label>
+                }
                 </div>
+                ))
               }
-              </div>
-              ))
-            }
 
-          </div>
-
-          <button type='submit'>Add</button>
+            </div>
+            </div>
+          <button className='makeTodoAddButton' type='submit'>Add</button>
         </form>
+  
       </div>
-    }
+    
    
-    </>
+    </div>
 
   )
 }

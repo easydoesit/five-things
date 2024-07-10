@@ -6,6 +6,7 @@ import { signInWithPopup, GoogleAuthProvider, User, onAuthStateChanged } from "f
 import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
 import MakeTodo from './components/makeTodo';
+import firstLetterToUpperCase from './Utils/upperCase';
 
 const db = CheckFirestoreInit();
 
@@ -18,8 +19,10 @@ function App() {
   const [weeksTodos, setWeeksTodos] = useState<DocumentData[]>([]);
   const [overDueTodos, setOverDueTodos] = useState<DocumentData[]>([]);
   const [completeTodos, setCompleteTodos] = useState<DocumentData[]>([]);
+  const [displayDay, setDisplayDay] = useState<makeTodoDayOptions>('today');
 
   const provider = new GoogleAuthProvider();
+  const dayOptions:makeTodoDayOptions[] = ['overdue', 'today', 'tomorrow', 'week', 'complete'] 
 
   const SIGN_IN_WITH_GOOGLE = async () => {
 
@@ -71,6 +74,28 @@ function App() {
     if (list === 'overdue') {
       setOverDueTodos((oldOverDueTodos) => [...oldOverDueTodos, todo]);
     }
+
+  }
+
+  const pickTodos = (day:makeTodoDayOptions) => {
+    
+    if(day === 'complete') {
+       return completeTodos;
+    }
+
+    if(day === 'overdue') {
+      return overDueTodos;
+    }
+
+    if(day === 'tomorrow') {
+      return tomorrowsTodos;
+    }
+    
+    if (day === 'week') {
+      return weeksTodos;
+    }
+
+    return todaysTodos;
 
   }
 
@@ -220,7 +245,7 @@ function App() {
 
       { !user && 
       <div className='startScreen'>
-        <img src={process.env.PUBLIC_URL + '/images/5Things_logo.png'} alt='5Thing Logo' className='logoStartScreen'/>
+        <img src={process.env.PUBLIC_URL + '/images/5Things_logo.png'} alt='5Things Logo' className='logoStartScreen'/>
             <button onClick={SIGN_IN_WITH_GOOGLE} className='googleButton'> 
             Sign In With Google
             <FcGoogle size={22} className='icon' />
@@ -233,65 +258,41 @@ function App() {
       
       { user &&
         <div>
-          <div>
-            <button onClick={SIGN_OUT} className='logout'>
-            SignOut
+          <div className='menuTop'>
+            <img className='menuTopLogo' src={process.env.PUBLIC_URL + '/images/5Things_logo.png'} alt='5Things Logo'></img>
+            <button onClick={SIGN_OUT} className='buttonLogout'>
+            Sign Out
             
             </button>
           </div>
+
           <div>
-         
-      <MakeTodo 
-        user ={user}
-        todaysTodos = {todaysTodos}
-        tomorrowsTodos = {tomorrowsTodos}
-        updateTodo = {updateTodoList}
-      /> 
-    </div>
-          <div>
-            <TodosList 
-            key={1}
-            title = "Overdue"
-            day = 'overdue'
-            todos={overDueTodos}
-            user = {user}
-            />
+            <MakeTodo 
+              user ={user}
+              todaysTodos = {todaysTodos}
+              tomorrowsTodos = {tomorrowsTodos}
+              updateTodo = {updateTodoList}
+            /> 
           </div>
-          <div>
-            <TodosList 
-            key={2}
-            title = "Today"
-            day = 'today'
-            todos={todaysTodos}
-            user = {user}
-            />
-          </div>
-          <div>
-            <TodosList 
-            key={3}
-            title = "Tomorrow"
-            day = 'tomorrow'
-            todos={tomorrowsTodos}
-            user = {user}
-            />
-          </div>
-          <div>
-            <TodosList 
-            key={4}
-            title = "This Week"
-            day = 'week'
-            todos={weeksTodos}
-            user = {user}
-            />
-          </div>
-          <div>
-            <TodosList 
-            key={5}
-            title = "Completed"
-            day = 'complete'
-            todos={completeTodos}
-            user = {user}
-            />
+
+            <div className='listMenuButtons' >
+              {dayOptions.map((day) => (
+                
+                <button key={day} className={`button${day}`} onClick={() => {setDisplayDay(day)}}>{firstLetterToUpperCase(day)}</button>
+              ))}
+              
+            </div>
+          
+          <div className='listHolder'>
+                <div key={displayDay} className={`list${displayDay}`}>
+                <TodosList 
+                title = {firstLetterToUpperCase(displayDay)}
+                day = {displayDay}
+                todos={pickTodos(displayDay)}
+                user = {user}
+                />
+              </div>
+
           </div>
         </div>
       }
