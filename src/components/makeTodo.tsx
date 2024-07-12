@@ -2,7 +2,7 @@ import React, {ChangeEvent, useState, SyntheticEvent} from 'react';
 import { CheckFirestoreInit } from '../Utils/Firestore';
 import { DocumentData, addDoc, collection, serverTimestamp,} from "firebase/firestore";
 import { User} from "firebase/auth";
-import firstLetterToUpperCase from '../Utils/upperCase';
+import {firstLetterToUpperCase} from '../Utils/changeCase';
 
 const db = CheckFirestoreInit();
 

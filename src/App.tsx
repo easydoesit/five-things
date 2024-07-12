@@ -6,7 +6,9 @@ import { signInWithPopup, GoogleAuthProvider, User, onAuthStateChanged } from "f
 import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
 import MakeTodo from './components/makeTodo';
-import firstLetterToUpperCase from './Utils/upperCase';
+import {firstLetterToUpperCase} from './Utils/changeCase';
+import sortOrder  from './Utils/sortOrder';
+
 
 const db = CheckFirestoreInit();
 
@@ -97,6 +99,26 @@ function App() {
 
     return todaysTodos;
 
+  }
+
+  const countTodos = (day:makeTodoDayOptions) => {
+    if(day === 'complete') {
+      return completeTodos.length;
+   }
+
+   if(day === 'overdue') {
+     return overDueTodos.length;
+   }
+
+   if(day === 'tomorrow') {
+     return tomorrowsTodos.length;
+   }
+   
+   if (day === 'week') {
+     return weeksTodos.length;
+   }
+
+   return todaysTodos.length;
   }
 
   useEffect(() => {
@@ -203,9 +225,9 @@ function App() {
         const dueDate = todo.dateDue.toDate();
       
         if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
-          
+      
           updateTodoList('overdue', todo);
-        
+
         } else if(dueDate.getTime() ===  currentDay.getTime() && todo.complete === false) {
           
           updateTodoList('today', todo);
@@ -257,7 +279,7 @@ function App() {
     {/* App */}
       
       { user &&
-        <div>
+        <div className='appWrapper'>
           <div className='menuTop'>
             <img className='menuTopLogo' src={process.env.PUBLIC_URL + '/images/5Things_logo.png'} alt='5Things Logo'></img>
             <button onClick={SIGN_OUT} className='buttonLogout'>
@@ -277,19 +299,20 @@ function App() {
 
             <div className='listMenuButtons' >
               {dayOptions.map((day) => (
+                <>
                 
-                <button key={day} className={`button${day}`} onClick={() => {setDisplayDay(day)}}>{firstLetterToUpperCase(day)}</button>
+                <button key={day} className={`button${day}`} onClick={() => {setDisplayDay(day)}}><div className='listMenuTodoCount'>{countTodos(day).toString()}</div>{firstLetterToUpperCase(day)}</button>
+                </>
               ))}
               
             </div>
           
           <div className='listHolder'>
-                <div key={displayDay} className={`list${displayDay}`}>
+                <div key={displayDay} className={`list${displayDay} specificList`}>
                 <TodosList 
                 title = {firstLetterToUpperCase(displayDay)}
                 day = {displayDay}
                 todos={pickTodos(displayDay)}
-                user = {user}
                 />
               </div>
 
