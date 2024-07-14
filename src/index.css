@@ -338,13 +338,13 @@ code {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: 8px;
   font-size: 12px;
-  width: 16px;
   height: 16px;
   position: absolute;
   margin-top: -32px;
   background-color: white;
+  padding: 0px 6px;
   color: black;
 }
 

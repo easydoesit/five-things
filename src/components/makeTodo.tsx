@@ -156,6 +156,13 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}
       
       }
 
+      setFieldInfo(toDoInitialState); 
+      let resetForm:HTMLFormElement | null;
+      resetForm = document.getElementById('makeTodoForm') as HTMLFormElement;
+        if(resetForm) {
+          resetForm.reset();
+        }
+
     }
 
   }
@@ -166,7 +173,7 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}
 
       
       <div className='makeTodoFormWrapper'>
-        <form className='makeTodoForm' name="make_todo" onSubmit={handleMakeTodo}>
+        <form className='makeTodoForm' id='makeTodoForm' name="make_todo" onSubmit={handleMakeTodo}>
           <div className='makeTodoColumn'>
             <input className='makeTodoTextBox'
             id='name'
