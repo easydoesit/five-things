@@ -31,7 +31,7 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}
   
   const [fieldInfo, setFieldInfo] = useState<TodoFieldI>(toDoInitialState);//fieldvalues
 
-  const maxPerDay = 6;
+  const maxPerDay = 7;
 
   const days:makeTodoDayOptions[] = ['today', 'tomorrow', 'week'];
   let defaultDay:makeTodoDayOptions = 'today';

@@ -37,6 +37,8 @@ useEffect(() => {
           name={todo.name}
           day={day}     
           complete={todo.complete}
+          first={index === 0 && true}
+          last={false}
           />
           }
           </>
@@ -59,8 +61,10 @@ useEffect(() => {
           <OfficialTodo
           key={index}
           name={todo.name}
-          day={todo.day}     
+          day={day}     
           complete={todo.complete}
+          first={false}
+          last= {index === 6 && true}
           />
           }
           </>
