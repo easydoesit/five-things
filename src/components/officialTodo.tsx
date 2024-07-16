@@ -1,14 +1,24 @@
+import { DocumentData } from "firebase/firestore";
+
 import { useState } from "react";
 
 interface IOfficialTodo {
   day:makeTodoDayOptions;
+  id:string;
   name:string;
   complete:boolean;
   first:boolean;
   last:boolean;
+  order:number;
+  reOrderTodo(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string):void;
+  todoList:DocumentData[];
+
 }
 
-export default function OfficialTodo({day, name, complete, first, last}:IOfficialTodo) {
+export default function OfficialTodo({day, id, name, complete, first, last, order, reOrderTodo, todoList}:IOfficialTodo) {
+  
+  console.log('todoList: ', todoList);
+  
   const [listChange, setListChange]= useState<boolean>(false);
 
   const checkDayRender = (day:makeTodoDayOptions) => {
@@ -32,13 +42,13 @@ export default function OfficialTodo({day, name, complete, first, last}:IOfficia
     <div className={`officialTodo  ${day}`}>
       { checkDayRender(day)   && 
       <div className="moveButtons">
-        <button className={`officialTodoMoveUp ${first === true && 'blackout'}`}><img src={process.env.PUBLIC_URL + '/images/icons_up.png'} alt="Move up Button"/></button>
-        <button className={`officialTodoMoveDown ${last === true && 'blackout'}`}><img src={process.env.PUBLIC_URL + '/images/icons_down.png'} alt="Move down Button"/></button>
+        <button className={`officialTodoMoveUp ${first === true && 'blackout'}`} onClick={() => {first !== true && reOrderTodo(day, todoList, 'up', id)}}><img src={process.env.PUBLIC_URL + '/images/icons_up.png'} alt="Move up Button"/></button>
+        <button className={`officialTodoMoveDown ${last === true && 'blackout'}`} onClick={() => {last !== true && reOrderTodo(day, todoList, 'down', id)}}><img src={process.env.PUBLIC_URL + '/images/icons_down.png'} alt="Move down Button"/></button>
         </div>
       }
       { !listChange ?
       <>  
-        <button className={`officialTodoName`} onClick={() => setListChange(true)}>{name}</button>
+        <button className={`officialTodoName`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${name} ${order}`}</button>
       </>
       :
       <div className="officialTodoChangeList">

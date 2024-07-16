@@ -3,6 +3,7 @@ import { CheckFirestoreInit } from '../Utils/Firestore';
 import { DocumentData, addDoc, collection, serverTimestamp,} from "firebase/firestore";
 import { User} from "firebase/auth";
 import {firstLetterToUpperCase} from '../Utils/changeCase';
+import { maxPerDay } from '../Utils/constants';
 
 const db = CheckFirestoreInit();
 
@@ -30,8 +31,6 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}
     }
   
   const [fieldInfo, setFieldInfo] = useState<TodoFieldI>(toDoInitialState);//fieldvalues
-
-  const maxPerDay = 7;
 
   const days:makeTodoDayOptions[] = ['today', 'tomorrow', 'week'];
   let defaultDay:makeTodoDayOptions = 'today';

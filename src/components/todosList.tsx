@@ -1,47 +1,45 @@
 import { DocumentData} from "firebase/firestore";
 import OfficialTodo from "./officialTodo";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import sortOrder from "../Utils/sortOrder";
+import { maxPerDay } from "../Utils/constants";
 
 interface TodosListI {
   todos:DocumentData[]; 
   title:string
   day:makeTodoDayOptions;
+  reOrderTodo(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string):void;
 }
 
-export default function TodosList({todos, title, day}:TodosListI) {
- console.log('day: ', day)
+export default function TodosList({todos, title, day, reOrderTodo}:TodosListI) {
+  console.log('sentTodos: ', todos)
 
-
-useEffect(() => {
-  
-  if(day !== 'complete') {
-    sortOrder(todos,'order');
-  } else {
-    sortOrder(todos, 'date');
-  }
-
-  
-}, [todos, day]);
+ console.log('day: ', day);
+  console.log('todos: ', todos);
 
   return (
+
     <div className="listInfo">
       <h1>{title}</h1>
       <ol>
         {
         todos.map((todo, index) => (
-          <>
+          <div key={index}>
           {index <= 4 &&
           <OfficialTodo
           key={index}
+          id={todo.id}
           name={todo.name}
           day={day}     
           complete={todo.complete}
           first={index === 0 && true}
-          last={false}
+          last={(index === todos.length -1) ? true : false}
+          order={todo.order}
+          reOrderTodo = {reOrderTodo}
+          todoList = {todos}
           />
           }
-          </>
+          </div>
         ))
         }
         {
@@ -56,24 +54,28 @@ useEffect(() => {
       <ol>
         {
         todos.map((todo, index) => (
-          <>
-          {index > 4 && index <= 6 &&
+          <div key={index}>
+          {index > 4 && index < maxPerDay &&
           <OfficialTodo
           key={index}
+          id={todo.id}
           name={todo.name}
           day={day}     
           complete={todo.complete}
           first={false}
-          last= {index === 6 && true}
+          last= {((index === 6) || (index === todos.length -1)) ? true : false}
+          order={todo.order}
+          reOrderTodo = {reOrderTodo}
+          todoList ={todos}
           />
           }
-          </>
+          </div>
           
         ))
         }
       </ol>
         {
-            todos.length > 7 && day === 'overdue' &&
+            todos.length > maxPerDay && day === 'overdue' &&
           <div>There's Even More</div>
         }
     

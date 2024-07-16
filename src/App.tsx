@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {FcGoogle} from 'react-icons/fc';
 import { CheckFirestoreInit } from './Utils/Firestore';
-import { DocumentData, collection, getDocs, orderBy, query, where, limit, QuerySnapshot, serverTimestamp, Timestamp} from "firebase/firestore";
+import { DocumentData, collection, getDocs, doc, updateDoc, orderBy, query, where, limit, QuerySnapshot, serverTimestamp, Timestamp, writeBatch} from "firebase/firestore";
 import { signInWithPopup, GoogleAuthProvider, User, onAuthStateChanged } from "firebase/auth";
 import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
@@ -79,6 +79,45 @@ function App() {
 
   }
 
+  const checkListandUpdateTodos = (todoListName:makeTodoDayOptions, newTodoList:DocumentData[]) => {
+    if (todoListName === 'today') {
+          
+      setTodaysTodos([]);
+      
+      newTodoList.forEach((todo) => {
+
+        updateTodoList(todoListName, todo);
+      
+      })
+    
+    } 
+
+    if (todoListName === 'tomorrow') {
+    
+      setTomorrowsTodos([]);
+    
+      newTodoList.forEach((todo) => {
+
+        updateTodoList(todoListName, todo);
+    
+      })
+      
+    }
+
+    if (todoListName === 'week') {
+      
+      setTomorrowsTodos([]);
+    
+      newTodoList.forEach((todo) => {
+
+        updateTodoList(todoListName, todo);
+    
+      })
+    
+    }
+
+  }
+
   const pickTodos = (day:makeTodoDayOptions) => {
     
     if(day === 'complete') {
@@ -119,6 +158,73 @@ function App() {
    }
 
    return todaysTodos.length;
+  }
+
+  const reOrderTodo = async(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string) => {
+    const updateRenderAndDB = async(direction:'up' | 'down', swapTodoIndex:number, mainTodoIndex:number, newTodoList:DocumentData[]) => {
+
+      sortOrder(newTodoList, 'order');
+
+      checkListandUpdateTodos(todoListName, newTodoList);
+
+      try {
+        if(db && user) {
+          const batch = writeBatch(db);
+
+          const mainTodoRef = doc(db, 'Todos', newTodoList[mainTodoIndex].id);
+
+          batch.update(mainTodoRef, {
+            order: newTodoList[mainTodoIndex].order,
+            dateUpdated: serverTimestamp() })
+
+          const swapTodoRef = doc(db, 'Todos', newTodoList[swapTodoIndex].id);
+
+          batch.update(swapTodoRef, {
+            order: newTodoList[swapTodoIndex].order,
+            dateUpdated: serverTimestamp() })
+
+          await batch.commit();
+        
+        }
+
+      } catch (error) {
+
+        console.log(error);
+      
+      }
+
+    }
+
+    const newTodoList = todoList;
+    const mainTodoIndex = todoList.findIndex((doc) => doc.id === todoId);
+    
+
+    switch (direction){
+
+      case 'down': {
+        const swapTodoIndex = todoList.findIndex((doc) => doc.order === todoList[mainTodoIndex].order + 1);
+        
+        newTodoList[mainTodoIndex].order += 1;
+        newTodoList[swapTodoIndex].order -= 1;
+
+        await updateRenderAndDB('down', swapTodoIndex, mainTodoIndex, newTodoList);
+
+      } 
+
+      break;
+
+      case 'up': {
+        const swapTodoIndex = todoList.findIndex((doc) => doc.order === todoList[mainTodoIndex].order - 1);
+        
+        newTodoList[mainTodoIndex].order -= 1;
+        newTodoList[swapTodoIndex].order += 1;
+
+        await updateRenderAndDB('up', swapTodoIndex, mainTodoIndex, newTodoList);
+
+      }
+      break;
+    }
+
   }
 
   useEffect(() => {
@@ -178,8 +284,10 @@ function App() {
         if (!ignore && querySnapshot) {//this is for the repeat in dev mode
 
           querySnapshot.forEach((doc) => {
+            const docObject = doc.data();
+            docObject.id = doc.id;
 
-            setFirstIncompleteTodos((oldFirstIncompleteTodos) => [...oldFirstIncompleteTodos, doc.data()]);
+            setFirstIncompleteTodos((oldFirstIncompleteTodos) => [...oldFirstIncompleteTodos, docObject]);
           
           });
 
@@ -190,8 +298,10 @@ function App() {
         if(!ignore && querySnapshot) {
 
           querySnapshot.forEach((doc) => {
+            const docObject = doc.data();
+            docObject.id = doc.id;
 
-            setInitialCompleteTodos((oldInitialCompleteTodos) => [...oldInitialCompleteTodos, doc.data()]);
+            setInitialCompleteTodos((oldInitialCompleteTodos) => [...oldInitialCompleteTodos, docObject]);
 
           });
 
@@ -219,6 +329,10 @@ function App() {
     const thisWeek = new Date();
     thisWeek.setHours(0,0,0,0);
     thisWeek.setTime(thisWeek.getTime() + (5*(24*60*60*1000)));
+
+    sortOrder(firstIncompleteTodos, 'order');
+
+    sortOrder(firstIncompleteTodos, 'date');
     
 
       firstIncompleteTodos.forEach((todo) => {
@@ -257,7 +371,7 @@ function App() {
 
   }, [initialCompleteTodos]);
 
-
+  console.log('todaysTodos :', todaysTodos);
 
   return (
   
@@ -308,11 +422,12 @@ function App() {
             </div>
           
           <div className='listHolder'>
-                <div key={displayDay} className={`list${displayDay} specificList`}>
-                <TodosList 
+                <div id="here" key={displayDay} className={`list${displayDay} specificList`}>
+                <TodosList
                 title = {firstLetterToUpperCase(displayDay)}
                 day = {displayDay}
                 todos={pickTodos(displayDay)}
+                reOrderTodo= {reOrderTodo}
                 />
               </div>
 
