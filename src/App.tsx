@@ -7,7 +7,9 @@ import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
 import MakeTodo from './components/makeTodo';
 import {firstLetterToUpperCase} from './Utils/changeCase';
+import { currentDayStart, nextDayStart, thisWeekStart } from './Utils/makeCleanDays';
 import sortOrder  from './Utils/sortOrder';
+import { maxPerDay } from './Utils/constants';
 
 
 const db = CheckFirestoreInit();
@@ -106,7 +108,7 @@ function App() {
 
     if (todoListName === 'week') {
       
-      setTomorrowsTodos([]);
+      setWeeksTodos([]);
     
       newTodoList.forEach((todo) => {
 
@@ -161,6 +163,7 @@ function App() {
   }
 
   const reOrderTodo = async(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string) => {
+    
     const updateRenderAndDB = async(direction:'up' | 'down', swapTodoIndex:number, mainTodoIndex:number, newTodoList:DocumentData[]) => {
 
       sortOrder(newTodoList, 'order');
@@ -224,6 +227,90 @@ function App() {
       }
       break;
     }
+
+  }
+
+  const changeDayTodo = (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week', todoId:string) => {
+    console.log("🚀 ~ changeDayTodo ~ fromTodoListName:", fromTodoListName)
+    const newFromTodoList = fromTodoList;
+    const todoIndex = fromTodoList.findIndex((doc) => doc.id === todoId);
+    const workingTodo =  fromTodoList[todoIndex];
+   
+    newFromTodoList.splice(todoIndex, 1);
+
+    let finalTodoList:DocumentData[];
+
+    const updateDBMoveDay = async(workingTodo:DocumentData) => {
+
+      try {
+        if(db && user) {
+          const batch = writeBatch(db);
+
+          const workingTodoRef = doc(db, 'Todos', workingTodo.id);
+
+          batch.update(workingTodoRef , {
+            order: workingTodo.order,
+            dateDue: workingTodo.dateDue,
+            dateUpdated: serverTimestamp() })
+
+          await batch.commit();
+        
+        }
+
+      } catch (error) {
+
+        console.log(error);
+      
+      }
+
+    }
+    
+    switch(moveToListName) {
+      
+      case 'today':
+        finalTodoList = todaysTodos;
+
+        workingTodo.dateDue = currentDayStart();
+        
+        if (todaysTodos.length < maxPerDay) {
+
+          workingTodo.order = todaysTodos.length + 1;
+          finalTodoList.push(workingTodo);
+      }
+      break;
+
+      case 'tomorrow':
+        finalTodoList = tomorrowsTodos;
+
+        workingTodo.dateDue = nextDayStart();
+
+        if (tomorrowsTodos.length < maxPerDay) {
+
+          workingTodo.order = tomorrowsTodos.length + 1;
+          finalTodoList.push(workingTodo);
+      
+        }
+
+      break;
+
+      case 'week':
+        finalTodoList = weeksTodos;
+
+        workingTodo.dateDue = thisWeekStart();
+
+        if (weeksTodos.length < maxPerDay) {
+
+          workingTodo.order = weeksTodos.length + 1;
+          finalTodoList.push(workingTodo);
+      
+      }      
+      break;
+
+    }
+    
+    checkListandUpdateTodos(moveToListName, finalTodoList);
+    checkListandUpdateTodos(fromTodoListName, newFromTodoList);
+    updateDBMoveDay(workingTodo);
 
   }
 
@@ -319,16 +406,12 @@ function App() {
     setTomorrowsTodos([]);
     setWeeksTodos([]);
     
-    const currentDay = new Date();
-    currentDay.setHours(0,0,0,0);
-
-    const nextDay = new Date();
-    nextDay.setHours(0,0,0,0);
-    nextDay.setTime(nextDay.getTime() + (24*60*60*1000));
+    const currentDay = currentDayStart();
+    console.log("🚀 ~ useEffect ~ currentDay:", currentDay.getTime())
     
-    const thisWeek = new Date();
-    thisWeek.setHours(0,0,0,0);
-    thisWeek.setTime(thisWeek.getTime() + (5*(24*60*60*1000)));
+    const nextDay =  nextDayStart();
+    console.log("🚀 ~ useEffect ~ nextDay:", nextDay.getTime())
+    
 
     sortOrder(firstIncompleteTodos, 'order');
 
@@ -337,6 +420,8 @@ function App() {
 
       firstIncompleteTodos.forEach((todo) => {
         const dueDate = todo.dateDue.toDate();
+        console.log("🚀 ~ firstIncompleteTodos.forEach ~ dueDate:", dueDate)
+        
       
         if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
       
@@ -370,8 +455,6 @@ function App() {
     )
 
   }, [initialCompleteTodos]);
-
-  console.log('todaysTodos :', todaysTodos);
 
   return (
   
@@ -428,6 +511,7 @@ function App() {
                 day = {displayDay}
                 todos={pickTodos(displayDay)}
                 reOrderTodo= {reOrderTodo}
+                changeDayTodo = {changeDayTodo}
                 />
               </div>
 

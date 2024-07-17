@@ -9,13 +9,10 @@ interface TodosListI {
   title:string
   day:makeTodoDayOptions;
   reOrderTodo(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string):void;
+  changeDayTodo(fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week', todoId:string): void;
 }
 
-export default function TodosList({todos, title, day, reOrderTodo}:TodosListI) {
-  console.log('sentTodos: ', todos)
-
- console.log('day: ', day);
-  console.log('todos: ', todos);
+export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo}:TodosListI) {
 
   return (
 
@@ -37,6 +34,9 @@ export default function TodosList({todos, title, day, reOrderTodo}:TodosListI) {
           order={todo.order}
           reOrderTodo = {reOrderTodo}
           todoList = {todos}
+          dateDue={todo.dueDate}
+          owner={todo.owner}
+          changeDayTodo={changeDayTodo}
           />
           }
           </div>
@@ -67,6 +67,9 @@ export default function TodosList({todos, title, day, reOrderTodo}:TodosListI) {
           order={todo.order}
           reOrderTodo = {reOrderTodo}
           todoList ={todos}
+          dateDue={todo.dueDate}
+          owner={todo.owner}
+          changeDayTodo={changeDayTodo}
           />
           }
           </div>

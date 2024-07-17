@@ -11,13 +11,14 @@ interface IOfficialTodo {
   last:boolean;
   order:number;
   reOrderTodo(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string):void;
+  changeDayTodo(fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week', todoId:string): void;
   todoList:DocumentData[];
+  owner:string;
+  dateDue:Date;
 
 }
 
-export default function OfficialTodo({day, id, name, complete, first, last, order, reOrderTodo, todoList}:IOfficialTodo) {
-  
-  console.log('todoList: ', todoList);
+export default function OfficialTodo({day, dateDue, owner, id, name, complete, first, last, order, reOrderTodo, todoList, changeDayTodo}:IOfficialTodo) {
   
   const [listChange, setListChange]= useState<boolean>(false);
 
@@ -36,7 +37,7 @@ export default function OfficialTodo({day, id, name, complete, first, last, orde
     return false;
   }
   
-
+  console.log('todoList :', todoList);
   
   return (
     <div className={`officialTodo  ${day}`}>
@@ -54,9 +55,10 @@ export default function OfficialTodo({day, id, name, complete, first, last, orde
       <div className="officialTodoChangeList">
         <div className="officialTodoChangeListHeading">Move Day?</div>
         <div>
-          <button className="buttontoday">Today</button>
-          <button className="buttontomorrow">Tomorrow</button>
-          <button className="buttonweek">Week</button>
+          <button className="buttontoday" onClick={()=> changeDayTodo(day, todoList,'today', id)}>Today</button>
+          <button className="buttontomorrow" onClick={()=> changeDayTodo(day, todoList, 'tomorrow', id)}>Tomorrow</button>
+          <button className="buttonweek" onClick={()=> changeDayTodo(day, todoList, 'week', id)}>Week</button>
+          <button className="button">Delete</button>
         </div>
       </div>
       }
