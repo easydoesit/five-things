@@ -437,12 +437,19 @@ code {
 .officialTodo {
   display: flex;
   flex-direction: row;
-  background-color: black;
   color: white;
   width: 99%;
   margin-bottom: 8px;
   border-radius: 12px;
   overflow: hidden;
+}
+
+.black {
+  background-color: black;
+}
+
+.yellow {
+  background-color: #000000aa;
 }
 
 .moveButtons {
@@ -488,7 +495,6 @@ code {
   align-items: center;
   border: none;
   color: white;
-  background-color: black;
   font-size: 20px;
   width: 100%;
   text-align: left;

@@ -21,9 +21,10 @@ interface IOfficialTodo {
   todaysTodos: DocumentData[];
   tomorrowsTodos: DocumentData[];
   weeksTodos:DocumentData[];
+  styles:'black' | 'yellow';
 }
 
-export default function OfficialTodo({day, dateDue, owner, id, name, complete, first, last, order, reOrderTodo, todoList, changeDayTodo, deleteTodo, restoreTodo ,todaysTodos, tomorrowsTodos, weeksTodos}:IOfficialTodo) {
+export default function OfficialTodo({day, dateDue, owner, id, name, complete, first, last, order, reOrderTodo, todoList, changeDayTodo, deleteTodo, restoreTodo ,todaysTodos, tomorrowsTodos, weeksTodos, styles}:IOfficialTodo) {
   
   const [listChange, setListChange]= useState<boolean>(false);
 
@@ -71,7 +72,7 @@ export default function OfficialTodo({day, dateDue, owner, id, name, complete, f
       }
       { !listChange ?
       <>  
-        <button className={`officialTodoName`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${name} ${order}`}</button>
+        <button className={`officialTodoName ${styles}`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${name}`}</button>
       </>
       :
       <div className="officialTodoChangeList">

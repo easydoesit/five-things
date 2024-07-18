@@ -47,6 +47,7 @@ export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo
           todaysTodos = {todaysTodos}
           tomorrowsTodos = {tomorrowsTodos}
           weeksTodos = {weeksTodos}
+          styles='black'
           />
           }
           </div>
@@ -85,6 +86,7 @@ export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo
           todaysTodos = {todaysTodos}
           tomorrowsTodos = {tomorrowsTodos}
           weeksTodos = {weeksTodos}
+          styles ='yellow'
           />
           }
           </div>
@@ -92,13 +94,44 @@ export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo
         ))
         }
       </ol>
+      {todos.length >= maxPerDay && day === 'complete' &&
+      <ol>
+        {
+        todos.map((todo, index) => (
+          <div key={index}>
+          {index >= maxPerDay &&
+          <OfficialTodo
+          key={index}
+          id={todo.id}
+          name={todo.name}
+          day={day}     
+          complete={todo.complete}
+          first={false}
+          last= {((index === 6) || (index === todos.length -1)) ? true : false}
+          order={todo.order}
+          reOrderTodo = {reOrderTodo}
+          todoList ={todos}
+          dateDue={todo.dueDate}
+          owner={todo.owner}
+          changeDayTodo={changeDayTodo}
+          deleteTodo = {deleteTodo}
+          restoreTodo = {restoreTodo}
+          todaysTodos = {todaysTodos}
+          tomorrowsTodos = {tomorrowsTodos}
+          weeksTodos = {weeksTodos}
+          styles = 'yellow'
+          />
+          }
+          </div>
+          
+        ))
+        }
+      </ol>
+        }
         {
             todos.length > maxPerDay && day === 'overdue' &&
           <div>There's Even More</div>
-        }
-    
-        
-    
+        }  
       
     </div>
   )
