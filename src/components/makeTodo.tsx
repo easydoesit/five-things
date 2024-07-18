@@ -11,6 +11,7 @@ interface MakeTodoI {
   user:User | null;
   todaysTodos: DocumentData[];
   tomorrowsTodos: DocumentData[];
+  weeksTodos:DocumentData[];
   updateTodo(list:makeTodoDayOptions, todo: DocumentData):void;
 }
 
@@ -21,7 +22,7 @@ interface TodoFieldI {
   user:User | null;
 }
 
-export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}:MakeTodoI) {
+export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos, updateTodo}:MakeTodoI) {
     
   const toDoInitialState:TodoFieldI = {
       name: "",
@@ -51,9 +52,11 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}
       return true;
     }
     
-    if(defaultDay === 'week' && day === 'week') {
+    if(defaultDay === 'week' && day === 'week' && weeksTodos.length >= maxPerDay) {
+      return false;
+    } else if (defaultDay === 'week' && day === 'week' && weeksTodos.length < maxPerDay) {
       return true;
-    } 
+    }
   }
   
   const disableRadio = (day:makeTodoDayOptions) => {
@@ -70,9 +73,11 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, updateTodo}
       return false;
     }
     
-    if(day === 'week') {
+    if(day === 'week' && weeksTodos.length >= maxPerDay) {
+      return true;
+    } else if (day === 'week' && weeksTodos.length < maxPerDay) {
       return false;
-    } 
+    }
   }
 
   const onFieldChange = (event: ChangeEvent<HTMLInputElement>) => {

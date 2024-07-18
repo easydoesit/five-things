@@ -372,6 +372,7 @@ code {
 }
 
 .buttonoverdue,
+.buttonDelete,
 .listoverdue {
   background-color: #c34042;
   color: white;
@@ -396,6 +397,7 @@ code {
 }
 
 .buttoncomplete,
+.buttonCancel,
 .listcomplete {
   background-color: #feba00;
   color: white;

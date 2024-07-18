@@ -9,6 +9,6 @@ export default function sortOrder(todolist:DocumentData[], sortType:'order' | 'd
 }
 
   if (sortType === 'date') {
-    todolist.sort((a:DocumentData, b:DocumentData) => {return a.dateUpdated - b.order.dateUpdated});
+    todolist.sort((a:DocumentData, b:DocumentData) => {return b.dateUpdated - a.dateUpdated});
   }
 }

@@ -9,10 +9,15 @@ interface TodosListI {
   title:string
   day:makeTodoDayOptions;
   reOrderTodo(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string):void;
-  changeDayTodo(fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week', todoId:string): void;
+  changeDayTodo(fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week' | 'complete', todoId:string): void;
+  deleteTodo(fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], todoId:string):void;
+  restoreTodo(todoId:string):void;
+  todaysTodos: DocumentData[];
+  tomorrowsTodos: DocumentData[];
+  weeksTodos:DocumentData[];
 }
 
-export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo}:TodosListI) {
+export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo, deleteTodo, restoreTodo, todaysTodos, tomorrowsTodos, weeksTodos}:TodosListI) {
 
   return (
 
@@ -37,6 +42,11 @@ export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo
           dateDue={todo.dueDate}
           owner={todo.owner}
           changeDayTodo={changeDayTodo}
+          deleteTodo = {deleteTodo}
+          restoreTodo = {restoreTodo}
+          todaysTodos = {todaysTodos}
+          tomorrowsTodos = {tomorrowsTodos}
+          weeksTodos = {weeksTodos}
           />
           }
           </div>
@@ -70,6 +80,11 @@ export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo
           dateDue={todo.dueDate}
           owner={todo.owner}
           changeDayTodo={changeDayTodo}
+          deleteTodo = {deleteTodo}
+          restoreTodo = {restoreTodo}
+          todaysTodos = {todaysTodos}
+          tomorrowsTodos = {tomorrowsTodos}
+          weeksTodos = {weeksTodos}
           />
           }
           </div>

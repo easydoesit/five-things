@@ -9,6 +9,7 @@ import MakeTodo from './components/makeTodo';
 import {firstLetterToUpperCase} from './Utils/changeCase';
 import { currentDayStart, nextDayStart, thisWeekStart } from './Utils/makeCleanDays';
 import sortOrder  from './Utils/sortOrder';
+import reNumberOrder from './Utils/reNumberOrder';
 import { maxPerDay } from './Utils/constants';
 
 
@@ -109,6 +110,18 @@ function App() {
     if (todoListName === 'week') {
       
       setWeeksTodos([]);
+    
+      newTodoList.forEach((todo) => {
+
+        updateTodoList(todoListName, todo);
+    
+      })
+    
+    }
+
+    if (todoListName === 'overdue') {
+      
+      setOverDueTodos([]);
     
       newTodoList.forEach((todo) => {
 
@@ -230,30 +243,57 @@ function App() {
 
   }
 
-  const changeDayTodo = (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week', todoId:string) => {
+  const changeDayTodo = (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week' | 'complete', todoId:string) => {
     console.log("🚀 ~ changeDayTodo ~ fromTodoListName:", fromTodoListName)
+    
     const newFromTodoList = fromTodoList;
+    console.log("🚀 ~ changeDayTodo ~ newFromTodoList:", newFromTodoList)
+    
     const todoIndex = fromTodoList.findIndex((doc) => doc.id === todoId);
     const workingTodo =  fromTodoList[todoIndex];
    
     newFromTodoList.splice(todoIndex, 1);
 
-    let finalTodoList:DocumentData[];
+    reNumberOrder(newFromTodoList, workingTodo.order);
 
-    const updateDBMoveDay = async(workingTodo:DocumentData) => {
+    let finalMoveToList:DocumentData[];
+
+    const updateDBMoveDay = async(workingTodo:DocumentData, fromList:DocumentData[]) => {
 
       try {
+
         if(db && user) {
-          const batch = writeBatch(db);
+          const batchWorkingTodo = writeBatch(db);
+          const batchFromList = writeBatch(db);
+
+          fromList.forEach((todo) => {
+            batchFromList.update(doc(db, 'Todos', todo.id), {
+              order: todo.order,
+              dateUpdated: serverTimestamp(),
+            });
+
+          })
 
           const workingTodoRef = doc(db, 'Todos', workingTodo.id);
 
-          batch.update(workingTodoRef , {
-            order: workingTodo.order,
-            dateDue: workingTodo.dateDue,
-            dateUpdated: serverTimestamp() })
+          if (moveToListName !== 'complete') {
+          
+            batchWorkingTodo.update(workingTodoRef , {
+              order: workingTodo.order,
+              dateDue: workingTodo.dateDue,
+              dateUpdated: serverTimestamp() 
+            });
+  
+          } else {
+            batchWorkingTodo.update(workingTodoRef, {
+              order: completeTodos.length,
+              complete: true,
+              dateUpdated: serverTimestamp(),
+            })
+          }
 
-          await batch.commit();
+          await batchWorkingTodo.commit();
+          await batchFromList.commit();
         
         }
 
@@ -268,51 +308,154 @@ function App() {
     switch(moveToListName) {
       
       case 'today':
-        finalTodoList = todaysTodos;
+        finalMoveToList = todaysTodos;
 
         workingTodo.dateDue = currentDayStart();
         
         if (todaysTodos.length < maxPerDay) {
 
-          workingTodo.order = todaysTodos.length + 1;
-          finalTodoList.push(workingTodo);
+          workingTodo.order = todaysTodos.length;
+          finalMoveToList.push(workingTodo);
       }
       break;
 
       case 'tomorrow':
-        finalTodoList = tomorrowsTodos;
+        finalMoveToList = tomorrowsTodos;
 
         workingTodo.dateDue = nextDayStart();
 
         if (tomorrowsTodos.length < maxPerDay) {
 
-          workingTodo.order = tomorrowsTodos.length + 1;
-          finalTodoList.push(workingTodo);
+          workingTodo.order = tomorrowsTodos.length;
+          finalMoveToList.push(workingTodo);
       
         }
 
       break;
 
       case 'week':
-        finalTodoList = weeksTodos;
+        finalMoveToList = weeksTodos;
 
         workingTodo.dateDue = thisWeekStart();
 
         if (weeksTodos.length < maxPerDay) {
 
-          workingTodo.order = weeksTodos.length + 1;
-          finalTodoList.push(workingTodo);
+          workingTodo.order = weeksTodos.length;
+          finalMoveToList.push(workingTodo);
       
       }      
       break;
 
+      case 'complete':
+        finalMoveToList = completeTodos;
+
+        workingTodo.order = completeTodos.length;
+        workingTodo.complete = true;
+
+        finalMoveToList.push(workingTodo);
+
+        break;
+
     }
     
-    checkListandUpdateTodos(moveToListName, finalTodoList);
+    checkListandUpdateTodos(moveToListName, finalMoveToList);
     checkListandUpdateTodos(fromTodoListName, newFromTodoList);
-    updateDBMoveDay(workingTodo);
+    updateDBMoveDay(workingTodo, newFromTodoList);
 
   }
+
+  const deleteTodo = (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[],todoId:string) => {
+    const newFromTodoList = fromTodoList;
+    const todoIndex = fromTodoList.findIndex((doc) => doc.id === todoId);
+    const workingTodo =  fromTodoList[todoIndex];
+
+
+    const updateDBDelete = async(todoToDelete:DocumentData) => {
+      try {
+        if(db && user) {
+          const batch = writeBatch(db);
+
+          const deleteTodoRef = doc(db, 'Todos', todoToDelete.id);
+
+          batch.delete(deleteTodoRef);
+
+          await batch.commit();
+        
+        }
+
+      } catch (error) {
+
+        console.log(error);
+      
+      }
+
+
+    }
+
+
+    newFromTodoList.splice(todoIndex, 1);
+
+    checkListandUpdateTodos(fromTodoListName, newFromTodoList);
+    updateDBDelete(workingTodo);
+
+  }
+
+  const restoreTodo = (todoId:string) => {
+    const newFromTodoList = completeTodos;
+    const finalMoveToList = weeksTodos;
+    const todoIndex = completeTodos.findIndex((doc) => doc.id === todoId);
+    const workingTodo =  completeTodos[todoIndex];
+    
+    workingTodo.complete = false;
+    workingTodo.order = weeksTodos.length;
+    
+    finalMoveToList.push(workingTodo);
+    
+    newFromTodoList.splice(todoIndex, 1);
+    
+    reNumberOrder(newFromTodoList, workingTodo.order);
+
+    const updateDBRestoreTodo = async(workingTodo:DocumentData, fromList:DocumentData[]) => {
+
+      try {
+        if(db && user) {
+          const workingTodoBatch = writeBatch(db);
+          const batchFromList = writeBatch(db);
+
+          fromList.forEach((todo) => {
+            batchFromList.update(doc(db, 'Todos', todo.id), {
+              order: todo.order,
+              dateUpdated: serverTimestamp(),
+            });
+
+          })
+
+          const workingTodoRef = doc(db, 'Todos', workingTodo.id);
+
+          workingTodoBatch.update(workingTodoRef , {
+            order: weeksTodos.length,
+            complete: false,
+            dateDue: thisWeekStart(),
+            dateUpdated: serverTimestamp() })
+
+          await workingTodoBatch.commit();
+        
+        }
+
+      } catch (error) {
+
+        console.log(error);
+      
+      }
+
+    }
+
+    checkListandUpdateTodos('week', finalMoveToList);
+    checkListandUpdateTodos('complete', newFromTodoList);
+    updateDBRestoreTodo(workingTodo, newFromTodoList);
+
+  }
+
 
   useEffect(() => {
 
@@ -407,21 +550,12 @@ function App() {
     setWeeksTodos([]);
     
     const currentDay = currentDayStart();
-    console.log("🚀 ~ useEffect ~ currentDay:", currentDay.getTime())
-    
     const nextDay =  nextDayStart();
-    console.log("🚀 ~ useEffect ~ nextDay:", nextDay.getTime())
-    
 
     sortOrder(firstIncompleteTodos, 'order');
 
-    sortOrder(firstIncompleteTodos, 'date');
-    
-
       firstIncompleteTodos.forEach((todo) => {
         const dueDate = todo.dateDue.toDate();
-        console.log("🚀 ~ firstIncompleteTodos.forEach ~ dueDate:", dueDate)
-        
       
         if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
       
@@ -447,6 +581,8 @@ function App() {
 
   useEffect(() => {
     setCompleteTodos([]);
+
+    sortOrder(initialCompleteTodos, 'date');
 
     initialCompleteTodos.forEach((todo) =>
     {
@@ -490,16 +626,14 @@ function App() {
               user ={user}
               todaysTodos = {todaysTodos}
               tomorrowsTodos = {tomorrowsTodos}
+              weeksTodos = {weeksTodos}
               updateTodo = {updateTodoList}
             /> 
           </div>
 
             <div className='listMenuButtons' >
-              {dayOptions.map((day) => (
-                <>
-                
+              {dayOptions.map((day) => (                
                 <button key={day} className={`button${day}`} onClick={() => {setDisplayDay(day)}}><div className='listMenuTodoCount'>{countTodos(day).toString()}</div>{firstLetterToUpperCase(day)}</button>
-                </>
               ))}
               
             </div>
@@ -512,6 +646,11 @@ function App() {
                 todos={pickTodos(displayDay)}
                 reOrderTodo= {reOrderTodo}
                 changeDayTodo = {changeDayTodo}
+                deleteTodo = {deleteTodo}     
+                restoreTodo = {restoreTodo}         
+                todaysTodos = {todaysTodos}
+                tomorrowsTodos = {tomorrowsTodos}
+                weeksTodos = {weeksTodos}
                 />
               </div>
 
