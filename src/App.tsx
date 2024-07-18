@@ -190,13 +190,22 @@ function App() {
           const mainTodoRef = doc(db, 'Todos', newTodoList[mainTodoIndex].id);
 
           batch.update(mainTodoRef, {
+            owner: user.uid,
+            complete: newTodoList[mainTodoIndex].complete,
             order: newTodoList[mainTodoIndex].order,
-            dateUpdated: serverTimestamp() })
+            dateDue: newTodoList[mainTodoIndex].dateDue,
+            name: newTodoList[mainTodoIndex].name,
+            dateUpdated: serverTimestamp() 
+          })
 
           const swapTodoRef = doc(db, 'Todos', newTodoList[swapTodoIndex].id);
 
           batch.update(swapTodoRef, {
+            owner: user.uid,
+            complete: newTodoList[swapTodoIndex].complete,
             order: newTodoList[swapTodoIndex].order,
+            dateDue: newTodoList[swapTodoIndex].dateDue,
+            name: newTodoList[swapTodoIndex].name,
             dateUpdated: serverTimestamp() })
 
           await batch.commit();
@@ -268,7 +277,11 @@ function App() {
 
           fromList.forEach((todo) => {
             batchFromList.update(doc(db, 'Todos', todo.id), {
+              owner: user.uid,
+              name: todo.name,
               order: todo.order,
+              dateDue: todo.dateDue,
+              complete: todo.complete,
               dateUpdated: serverTimestamp(),
             });
 
@@ -279,6 +292,9 @@ function App() {
           if (moveToListName !== 'complete') {
           
             batchWorkingTodo.update(workingTodoRef , {
+              owner: user.uid,
+              name:workingTodo.name,
+              complete: false,
               order: workingTodo.order,
               dateDue: workingTodo.dateDue,
               dateUpdated: serverTimestamp() 
@@ -286,8 +302,11 @@ function App() {
   
           } else {
             batchWorkingTodo.update(workingTodoRef, {
+              owner: user.uid,
+              name: workingTodo.name,
               order: completeTodos.length,
               complete: true,
+              dateDue: workingTodo.dateDue,
               dateUpdated: serverTimestamp(),
             })
           }
