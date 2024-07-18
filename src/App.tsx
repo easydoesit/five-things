@@ -401,58 +401,63 @@ function App() {
   }
 
   const restoreTodo = (todoId:string) => {
-    const newFromTodoList = completeTodos;
-    const finalMoveToList = weeksTodos;
-    const todoIndex = completeTodos.findIndex((doc) => doc.id === todoId);
-    const workingTodo =  completeTodos[todoIndex];
     
-    workingTodo.complete = false;
-    workingTodo.order = weeksTodos.length;
-    
-    finalMoveToList.push(workingTodo);
-    
-    newFromTodoList.splice(todoIndex, 1);
-    
-    reNumberOrder(newFromTodoList, workingTodo.order);
+    if(weeksTodos.length < maxPerDay) {
+      
+      const newFromTodoList = completeTodos;
+      const finalMoveToList = weeksTodos;
+      const todoIndex = completeTodos.findIndex((doc) => doc.id === todoId);
+      const workingTodo =  completeTodos[todoIndex];
+      
+      workingTodo.complete = false;
+      workingTodo.order = weeksTodos.length;
+      
+      finalMoveToList.push(workingTodo);
+      
+      newFromTodoList.splice(todoIndex, 1);
+      
+      reNumberOrder(newFromTodoList, workingTodo.order);
 
-    const updateDBRestoreTodo = async(workingTodo:DocumentData, fromList:DocumentData[]) => {
+      const updateDBRestoreTodo = async(workingTodo:DocumentData, fromList:DocumentData[]) => {
 
-      try {
-        if(db && user) {
-          const workingTodoBatch = writeBatch(db);
-          const batchFromList = writeBatch(db);
+        try {
+          if(db && user) {
+            const workingTodoBatch = writeBatch(db);
+            const batchFromList = writeBatch(db);
 
-          fromList.forEach((todo) => {
-            batchFromList.update(doc(db, 'Todos', todo.id), {
-              order: todo.order,
-              dateUpdated: serverTimestamp(),
-            });
+            fromList.forEach((todo) => {
+              batchFromList.update(doc(db, 'Todos', todo.id), {
+                order: todo.order,
+                dateUpdated: serverTimestamp(),
+              });
 
-          })
+            })
 
-          const workingTodoRef = doc(db, 'Todos', workingTodo.id);
+            const workingTodoRef = doc(db, 'Todos', workingTodo.id);
 
-          workingTodoBatch.update(workingTodoRef , {
-            order: weeksTodos.length,
-            complete: false,
-            dateDue: thisWeekStart(),
-            dateUpdated: serverTimestamp() })
+            workingTodoBatch.update(workingTodoRef , {
+              order: weeksTodos.length,
+              complete: false,
+              dateDue: thisWeekStart(),
+              dateUpdated: serverTimestamp() })
 
-          await workingTodoBatch.commit();
+            await workingTodoBatch.commit();
+          
+          }
+
+        } catch (error) {
+
+          console.log(error);
         
         }
 
-      } catch (error) {
-
-        console.log(error);
-      
       }
 
-    }
+      checkListandUpdateTodos('week', finalMoveToList);
+      checkListandUpdateTodos('complete', newFromTodoList);
+      updateDBRestoreTodo(workingTodo, newFromTodoList);
 
-    checkListandUpdateTodos('week', finalMoveToList);
-    checkListandUpdateTodos('complete', newFromTodoList);
-    updateDBRestoreTodo(workingTodo, newFromTodoList);
+    }
 
   }
 
