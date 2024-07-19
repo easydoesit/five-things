@@ -1,7 +1,5 @@
 import { DocumentData} from "firebase/firestore";
 import OfficialTodo from "./officialTodo";
-import { useEffect, useState } from "react";
-import sortOrder from "../Utils/sortOrder";
 import { maxPerDay } from "../Utils/constants";
 
 interface TodosListI {
