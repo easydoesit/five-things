@@ -520,6 +520,9 @@ code {
   height: 22px;
   padding-top: 8px;
 }
+.officialTodoChangeListHeading {
+  background-color: black;
+}
 
 .officialTodoComplete {
   display: flex;

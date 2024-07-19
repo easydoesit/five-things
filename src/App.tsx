@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {FcGoogle} from 'react-icons/fc';
 import { CheckFirestoreInit } from './Utils/Firestore';
-import { DocumentData, collection, getDocs, doc, updateDoc, orderBy, query, where, limit, QuerySnapshot, serverTimestamp, Timestamp, writeBatch} from "firebase/firestore";
+import { DocumentData, collection, getDocs, doc, query, where, limit, serverTimestamp, writeBatch} from "firebase/firestore";
 import { signInWithPopup, GoogleAuthProvider, User, onAuthStateChanged } from "firebase/auth";
 import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
