@@ -171,7 +171,8 @@ code {
   }
 }
 
-.spinner {
+.spinner,
+.confirmDeletePopUpWrapper {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,6 +182,7 @@ code {
   position: absolute;
   right: 0px;
   top: 0px;
+  z-index: 1000;
 }
 
 .appWrapper {
@@ -390,6 +392,7 @@ code {
   color: white;
 }
 
+.deleteConfirm,
 .buttontoday,
 .listtoday {
   background-color: #acc665;
@@ -408,6 +411,7 @@ code {
   color: white;
 }
 
+.deleteCancel,
 .buttoncomplete,
 .buttonCancel,
 .listcomplete {
@@ -554,4 +558,35 @@ code {
 .hrcomplete {
   border: 1px solid rgba(255, 255, 255, 0.25);
   width: 75%;
+}
+
+.confirmDeletePopUp {
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  width: 80%;
+  justify-content: center;
+  background-color: #c34042;
+  border: 2px black solid;
+  border-radius: 12px;
+  color: white;
+  padding: 8px;
+}
+
+.confirmDeletePopUp strong {
+  font-weight: bold;
+}
+
+.confirmButtons {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  justify-content: center;
+}
+
+.confirmButtons button {
+  width: 50%;
+  border: none;
+  font-weight: bold;
+  font-size: 16px;
 }

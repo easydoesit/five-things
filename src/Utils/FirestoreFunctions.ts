@@ -1,4 +1,4 @@
-import {DocumentData, writeBatch, doc,serverTimestamp, updateDoc } from "firebase/firestore";
+import {DocumentData, writeBatch, doc,serverTimestamp, updateDoc, deleteDoc } from "firebase/firestore";
 import { CheckFirestoreInit } from "./Firestore";
 import { User } from "firebase/auth";
 
@@ -43,7 +43,7 @@ export async function updateSingleTodoFirestore(user:User, todo:DocumentData) {
     if(db && user) {
       const todoRef = doc(db, 'Todos', todo.id);
 
-      const response = await updateDoc(todoRef, {
+      await updateDoc(todoRef, {
         owner: user.uid,
         name: todo.name,
         order: todo.order,
@@ -52,7 +52,6 @@ export async function updateSingleTodoFirestore(user:User, todo:DocumentData) {
         dateUpdated: serverTimestamp(),
       });
 
-      return response;
     }
 
   } catch(error) {
@@ -61,5 +60,21 @@ export async function updateSingleTodoFirestore(user:User, todo:DocumentData) {
   
   }
 
+}
 
+export async function deleteSingleTodoFirestore(user:User, todo:DocumentData) {
+
+  try {
+
+    if(db && user) {
+    
+      await deleteDoc(doc(db, 'Todos', todo.id));
+    
+    }
+
+  } catch(error) {
+    
+    alert(error);
+    
+  }
 }

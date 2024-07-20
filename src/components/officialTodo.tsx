@@ -28,9 +28,9 @@ interface IOfficialTodo {
   styles:'black' | 'yellow';
 }
 
-export default function OfficialTodo({day, dateDue, owner, id, name, complete, first, last, order, reOrderTodo, todoList, changeDayTodo, deleteTodo, restoreTodo ,todaysTodos, tomorrowsTodos, weeksTodos, styles}:IOfficialTodo) {
-  
+export default function OfficialTodo({day, dateDue, owner, id, name, complete, first, last, order, reOrderTodo, todoList, changeDayTodo, deleteTodo, restoreTodo ,todaysTodos, tomorrowsTodos, weeksTodos, styles}:IOfficialTodo) {  
   const [listChange, setListChange]= useState<boolean>(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<boolean>(false);
 
   const checkDayRender = (day:makeTodoDayOptions) => {
     if (day === 'today') {
@@ -67,40 +67,58 @@ export default function OfficialTodo({day, dateDue, owner, id, name, complete, f
     }
   
   return (
-    <div className={`officialTodo  ${day}`}>
-      { checkDayRender(day)   && 
-      <div className="moveButtons">
-        <button className={`officialTodoMoveUp ${first === true && 'blackout'}`} onClick={() => {first !== true && reOrderTodo(day, todoList, 'up', id)}}>{first !== true && <img src={upIcon} alt="Move up Button"/>}</button>
-        <button className={`officialTodoMoveDown ${last === true && 'blackout'}`} onClick={() => {last !== true && reOrderTodo(day, todoList, 'down', id)}}>{last !== true && <img src={downIcon} alt="Move down Button"/>}</button>
-        </div>
-      }
-      { !listChange ?
-      <>  
-        <button className={`officialTodoName ${styles}`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${name}`}</button>
-      </>
-      :
-      <div className="officialTodoChangeList">
-        <div className="officialTodoChangeListHeading">Move Day?</div>
-        <div>
-        <button className="buttonCancel" onClick={()=> {setListChange(false)}}>Cancel</button>
-           {checkMoveToRender(day, todaysTodos, 'today') &&
-          <button className="buttontoday" onClick={()=> {changeDayTodo(day, todoList,'today', id); setListChange(false)}}>Today</button>
-          }
-          {checkMoveToRender(day, tomorrowsTodos, 'tomorrow')  &&
-          <button className="buttontomorrow" onClick={()=> {changeDayTodo(day, todoList, 'tomorrow', id); setListChange(false)}}>Tomorrow</button>
-          }
-          {checkMoveToRender(day, weeksTodos, 'week')  &&
-          <button className="buttonweek" onClick={()=> {changeDayTodo(day, todoList, 'week', id); setListChange(false)}}>Week</button>
-          }
-          <button className="buttonDelete" onClick={()=> {deleteTodo(day, todoList, id); setListChange(false)}}>Delete</button>
+    <>
+    {deleteConfirmation &&
+      <div className="confirmDeletePopUpWrapper">
+        <div className='confirmDeletePopUp'>
+          <p>Confirm Deletion of... <br /> <br /><strong>"{name}"</strong> <br /> <br /> </p>
+          <div className='confirmButtons'>
+            <button className='deleteCancel' onClick={() => {setDeleteConfirmation(false); setListChange(false)}}>Nevermind</button>
+            <button className='deleteConfirm' onClick={()=> {deleteTodo(day, todoList, id); setListChange(false); setDeleteConfirmation(false)}}>Confirm</button>
+          </div>
+
         </div>
       </div>
-      }
-        {complete === true ? 
-        <button className="officialTodoComplete" onClick={() => restoreTodo(id)}><img src={restoreIcon} alt="Restore Button" /></button>
-          :
-        <button className="officialTodoComplete" onClick={() => changeDayTodo(day, todoList, 'complete', id)}><img src={completeIcon} alt="Complete Button"/></button>
+
+    }
+
+
+
+      <div className={`officialTodo  ${day}`}>
+        { checkDayRender(day)   && 
+        <div className="moveButtons">
+          <button className={`officialTodoMoveUp ${first === true && 'blackout'}`} onClick={() => {first !== true && reOrderTodo(day, todoList, 'up', id)}}>{first !== true && <img src={upIcon} alt="Move up Button"/>}</button>
+          <button className={`officialTodoMoveDown ${last === true && 'blackout'}`} onClick={() => {last !== true && reOrderTodo(day, todoList, 'down', id)}}>{last !== true && <img src={downIcon} alt="Move down Button"/>}</button>
+          </div>
         }
-      </div>
+        { !listChange ?
+        <>  
+          <button className={`officialTodoName ${styles}`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${name}`}</button>
+        </>
+        :
+        <div className="officialTodoChangeList">
+          <div className="officialTodoChangeListHeading">Move Day?</div>
+          <div>
+          <button className="buttonCancel" onClick={()=> {setListChange(false)}}>Cancel</button>
+            {checkMoveToRender(day, todaysTodos, 'today') &&
+            <button className="buttontoday" onClick={()=> {changeDayTodo(day, todoList,'today', id); setListChange(false)}}>Today</button>
+            }
+            {checkMoveToRender(day, tomorrowsTodos, 'tomorrow')  &&
+            <button className="buttontomorrow" onClick={()=> {changeDayTodo(day, todoList, 'tomorrow', id); setListChange(false)}}>Tomorrow</button>
+            }
+            {checkMoveToRender(day, weeksTodos, 'week')  &&
+            <button className="buttonweek" onClick={()=> {changeDayTodo(day, todoList, 'week', id); setListChange(false)}}>Week</button>
+            }
+            <button className="buttonDelete" onClick={()=> {setDeleteConfirmation(true)}}>Delete</button>
+          </div>
+        </div>
+        }
+          {complete === true ? 
+          <button className="officialTodoComplete" onClick={() => restoreTodo(id)}><img src={restoreIcon} alt="Restore Button" /></button>
+            :
+          <button className="officialTodoComplete" onClick={() => changeDayTodo(day, todoList, 'complete', id)}><img src={completeIcon} alt="Complete Button"/></button>
+          }
+        </div>
+      </>
   )
 }

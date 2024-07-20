@@ -13,7 +13,7 @@ import reNumberOrder from './Utils/reNumberOrder';
 import { maxPerDay } from './Utils/constants';
 import logo from './images/5Things_logo.png';
 import spinner from './images/loading-gif.gif';
-import { UpdateEntireTodoListFirestore, updateSingleTodoFirestore } from './Utils/FirestoreFunctions';
+import { UpdateEntireTodoListFirestore, updateSingleTodoFirestore, deleteSingleTodoFirestore } from './Utils/FirestoreFunctions';
 
 const db = CheckFirestoreInit();
 
@@ -33,8 +33,6 @@ function App() {
   const dayOptions:makeTodoDayOptions[] = ['overdue', 'today', 'tomorrow', 'week', 'complete'] 
 
   const SIGN_IN_WITH_GOOGLE = async () => {
-
-    // if (!isMobile) { 
 
       await signInWithPopup(firebaseAuth, provider)
       .then((result) => {
@@ -136,47 +134,48 @@ function App() {
   }, [])
 
   const pickTodos = (day:makeTodoDayOptions) => {
-    
-    if(day === 'complete') {
-       return completeTodos;
-    }
 
-    if(day === 'overdue') {
-      return overDueTodos;
-    }
+    switch (day){
+      case 'complete':
+        return completeTodos;
 
-    if(day === 'tomorrow') {
-      return tomorrowsTodos;
-    }
-    
-    if (day === 'week') {
-      return weeksTodos;
-    }
+      case 'overdue':
+        return overDueTodos;
 
-    return todaysTodos;
+      case 'tomorrow':
+        return tomorrowsTodos
+
+      case 'week':
+        return weeksTodos;
+      
+      default:
+        return todaysTodos;
+    }
 
   }
 
   const countTodos = (day:makeTodoDayOptions) => {
-    if(day === 'complete') {
-      return completeTodos.length;
-   }
+    switch (day){
+      case 'complete':
+        return completeTodos.length;
 
-   if(day === 'overdue') {
-     return overDueTodos.length;
-   }
+      case 'overdue':
+        return overDueTodos.length;
 
-   if(day === 'tomorrow') {
-     return tomorrowsTodos.length;
-   }
-   
-   if (day === 'week') {
-     return weeksTodos.length;
-   }
-
-   return todaysTodos.length;
+      case 'tomorrow':
+        return tomorrowsTodos.length
+      case 'week':
+        return weeksTodos.length;
+      
+      default:
+        return todaysTodos.length;
+    }
   }
-//////REORDER TODOS
+
+  /////////////////////////////
+  //////REORDER TODOS ////////
+  ///////////////////////////
+
   const reOrderTodo = async(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string) => {
     setTransition(true);
 
@@ -232,13 +231,22 @@ function App() {
         setTransition(false)});
 
   }
-/////CHANGEDAYTODOS//////
-  const changeDayTodo = (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week' | 'complete', todoId:string) => {
-    
-    const newFromTodoList = fromTodoList;
 
-    const todoIndex = fromTodoList.findIndex((doc) => doc.id === todoId);
-    const workingTodo =  fromTodoList[todoIndex];
+  ////////////////////////////  
+  ///// CHANGEDAYTODOS //////
+  //////////////////////////
+  
+  const changeDayTodo = async(fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week' | 'complete', todoId:string) => {
+    setTransition(true);
+
+    const newFromTodoList:DocumentData[] = [];
+     
+    fromTodoList.forEach((todo) => {
+      newFromTodoList.push(todo);
+    })
+
+    const todoIndex = newFromTodoList.findIndex((doc) => doc.id === todoId);
+    const workingTodo =  newFromTodoList[todoIndex];
    
     newFromTodoList.splice(todoIndex, 1);
 
@@ -251,36 +259,12 @@ function App() {
       try {
 
         if(db && user) {
-          UpdateEntireTodoListFirestore(user, fromList);
-
-          const batchWorkingTodo = writeBatch(db);
-
-          const workingTodoRef = doc(db, 'Todos', workingTodo.id);
-
-          if (moveToListName !== 'complete') {
-          
-            batchWorkingTodo.update(workingTodoRef , {
-              owner: user.uid,
-              name:workingTodo.name,
-              complete: false,
-              order: workingTodo.order,
-              dateDue: workingTodo.dateDue,
-              dateUpdated: serverTimestamp() 
-            });
-  
-          } else {
-            batchWorkingTodo.update(workingTodoRef, {
-              owner: user.uid,
-              name: workingTodo.name,
-              order: completeTodos.length,
-              complete: true,
-              dateDue: workingTodo.dateDue,
-              dateUpdated: serverTimestamp(),
-            })
-          }
-
-          await batchWorkingTodo.commit();
         
+          const listUpdate = UpdateEntireTodoListFirestore(user, fromList);
+          const todoUpdate = updateSingleTodoFirestore(user, workingTodo);
+        
+          Promise.all([listUpdate, todoUpdate]);
+
         }
 
       } catch (error) {
@@ -295,95 +279,72 @@ function App() {
       
       case 'today':
         finalMoveToList = todaysTodos;
-
         workingTodo.dateDue = currentDayStart();
-        
-        if (todaysTodos.length < maxPerDay) {
+        workingTodo.order = todaysTodos.length;
 
-          workingTodo.order = todaysTodos.length;
-          finalMoveToList.push(workingTodo);
-      }
+        finalMoveToList.push(workingTodo);
+        
       break;
 
       case 'tomorrow':
         finalMoveToList = tomorrowsTodos;
-
         workingTodo.dateDue = nextDayStart();
-
-        if (tomorrowsTodos.length < maxPerDay) {
-
-          workingTodo.order = tomorrowsTodos.length;
-          finalMoveToList.push(workingTodo);
-      
-        }
+        workingTodo.order = tomorrowsTodos.length;
+  
+        finalMoveToList.push(workingTodo);
 
       break;
 
       case 'week':
         finalMoveToList = weeksTodos;
-
         workingTodo.dateDue = thisWeekStart();
-
-        if (weeksTodos.length < maxPerDay) {
-
-          workingTodo.order = weeksTodos.length;
-          finalMoveToList.push(workingTodo);
-      
-      }      
+        workingTodo.order = weeksTodos.length;
+        
+        finalMoveToList.push(workingTodo);
+        
       break;
 
       case 'complete':
         finalMoveToList = completeTodos;
-
-        workingTodo.order = completeTodos.length;
         workingTodo.complete = true;
-
+        
         finalMoveToList.push(workingTodo);
 
-        break;
+      break;
 
     }
     
     checkListandUpdateTodosRender(moveToListName, finalMoveToList);
     checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
-    updateDBMoveDay(workingTodo, newFromTodoList);
+
+    await updateDBMoveDay(workingTodo, newFromTodoList)
+    .then(() => {
+      setTransition(false);
+    });
 
   }
 
-  const deleteTodo = (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[],todoId:string) => {
-    const newFromTodoList = fromTodoList;
-    const todoIndex = fromTodoList.findIndex((doc) => doc.id === todoId);
-    const workingTodo =  fromTodoList[todoIndex];
+  ////////////////////////////  
+  ///// DELETE TODO /////////
+  //////////////////////////
+  
 
-
-    const updateDBDelete = async(todoToDelete:DocumentData) => {
-      try {
-        if(db && user) {
-          const batch = writeBatch(db);
-
-          const deleteTodoRef = doc(db, 'Todos', todoToDelete.id);
-
-          batch.delete(deleteTodoRef);
-
-          await batch.commit();
-        
-        }
-
-      } catch (error) {
-
-        alert(error);
-      
-      }
-
-
-    }
-
+  const deleteTodo = async (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[],todoId:string) => {
+    setTransition(true); 
+    const newFromTodoList:DocumentData[] = [];
+     
+    fromTodoList.forEach((todo) => {
+      newFromTodoList.push(todo);
+    })
+   
+    const todoIndex = newFromTodoList.findIndex((doc) => doc.id === todoId);
+    const workingTodo =  newFromTodoList[todoIndex];
 
     newFromTodoList.splice(todoIndex, 1);
-
     checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
-    updateDBDelete(workingTodo);
-
+    await deleteSingleTodoFirestore(user!, workingTodo)
+    .then(() => setTransition(false));
+    
   }
 
   const restoreTodo = (todoId:string) => {
@@ -443,6 +404,8 @@ function App() {
       checkListandUpdateTodosRender('complete', newFromTodoList);
       updateDBRestoreTodo(workingTodo, newFromTodoList);
 
+    } else {
+      alert('Sorry The Week is Full.\n\n Recommend you reorganize.')
     }
 
   }
