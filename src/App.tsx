@@ -216,7 +216,6 @@ function App() {
       case 'up': {
         const swapTodoIndex = mainTodoIndex - 1;
         swapTodo = newTodoList[swapTodoIndex];
-        console.log("🚀 ~ reOrderTodo ~ swapTodo:", swapTodo)
         
         mainTodo.order -= 1;
         swapTodo.order += 1;
@@ -230,17 +229,14 @@ function App() {
     
     await sendSwapDB(mainTodo, swapTodo)
       .then(() => {
-        console.log('all good');
         setTransition(false)});
 
   }
 /////CHANGEDAYTODOS//////
   const changeDayTodo = (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week' | 'complete', todoId:string) => {
-    console.log("🚀 ~ changeDayTodo ~ fromTodoListName:", fromTodoListName)
     
     const newFromTodoList = fromTodoList;
-    console.log("🚀 ~ changeDayTodo ~ newFromTodoList:", newFromTodoList)
-    
+
     const todoIndex = fromTodoList.findIndex((doc) => doc.id === todoId);
     const workingTodo =  fromTodoList[todoIndex];
    
@@ -289,7 +285,7 @@ function App() {
 
       } catch (error) {
 
-        console.log(error);
+        alert(error);
       
       }
 
@@ -375,7 +371,7 @@ function App() {
 
       } catch (error) {
 
-        console.log(error);
+        alert(error);
       
       }
 
@@ -437,7 +433,7 @@ function App() {
 
         } catch (error) {
 
-          console.log(error);
+          alert(error);
         
         }
 
@@ -480,7 +476,7 @@ function App() {
           return querySnapshot;
 
         } catch (error) {
-          console.log(error);
+          alert(error);
         }
 
       };
@@ -497,7 +493,7 @@ function App() {
           
 
         } catch (error) {
-          console.log(error);
+          alert(error);
         }
 
       }
