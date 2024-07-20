@@ -76,7 +76,7 @@ export default function OfficialTodo({day, dateDue, owner, id, name, complete, f
       }
       { !listChange ?
       <>  
-        <button className={`officialTodoName ${styles}`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${order} ${name}`}</button>
+        <button className={`officialTodoName ${styles}`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${name}`}</button>
       </>
       :
       <div className="officialTodoChangeList">
