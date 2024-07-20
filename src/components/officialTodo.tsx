@@ -1,7 +1,11 @@
 import { DocumentData } from "firebase/firestore";
-
 import { useState } from "react";
 import { maxPerDay } from "../Utils/constants";
+import downIcon from "../images/icons_down.png";
+import upIcon from '../images/icons_up.png'
+import restoreIcon from '../images/icons_restore.png';
+import completeIcon from '../images/icons_complete.png'
+
 
 interface IOfficialTodo {
   day:makeTodoDayOptions;
@@ -66,13 +70,13 @@ export default function OfficialTodo({day, dateDue, owner, id, name, complete, f
     <div className={`officialTodo  ${day}`}>
       { checkDayRender(day)   && 
       <div className="moveButtons">
-        <button className={`officialTodoMoveUp ${first === true && 'blackout'}`} onClick={() => {first !== true && reOrderTodo(day, todoList, 'up', id)}}><img src={process.env.PUBLIC_URL + '/images/icons_up.png'} alt="Move up Button"/></button>
-        <button className={`officialTodoMoveDown ${last === true && 'blackout'}`} onClick={() => {last !== true && reOrderTodo(day, todoList, 'down', id)}}><img src={process.env.PUBLIC_URL + '/images/icons_down.png'} alt="Move down Button"/></button>
+        <button className={`officialTodoMoveUp ${first === true && 'blackout'}`} onClick={() => {first !== true && reOrderTodo(day, todoList, 'up', id)}}>{first !== true && <img src={upIcon} alt="Move up Button"/>}</button>
+        <button className={`officialTodoMoveDown ${last === true && 'blackout'}`} onClick={() => {last !== true && reOrderTodo(day, todoList, 'down', id)}}>{last !== true && <img src={downIcon} alt="Move down Button"/>}</button>
         </div>
       }
       { !listChange ?
       <>  
-        <button className={`officialTodoName ${styles}`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${name}`}</button>
+        <button className={`officialTodoName ${styles}`} onClick={() => {if(day !== 'complete'){ setListChange(true) }}}>{`${order} ${name}`}</button>
       </>
       :
       <div className="officialTodoChangeList">
@@ -93,9 +97,9 @@ export default function OfficialTodo({day, dateDue, owner, id, name, complete, f
       </div>
       }
         {complete === true ? 
-        <button className="officialTodoComplete" onClick={() => restoreTodo(id)}><img src={process.env.PUBLIC_URL + '/images/icons_restore.png'} alt="Restore Button" /></button>
+        <button className="officialTodoComplete" onClick={() => restoreTodo(id)}><img src={restoreIcon} alt="Restore Button" /></button>
           :
-        <button className="officialTodoComplete" onClick={() => changeDayTodo(day, todoList, 'complete', id)}><img src={process.env.PUBLIC_URL + '/images/icons_complete.png'} alt="Complete Button"/></button>
+        <button className="officialTodoComplete" onClick={() => changeDayTodo(day, todoList, 'complete', id)}><img src={completeIcon} alt="Complete Button"/></button>
         }
       </div>
   )

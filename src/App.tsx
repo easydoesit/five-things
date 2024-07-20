@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {FcGoogle} from 'react-icons/fc';
 import { CheckFirestoreInit } from './Utils/Firestore';
 import { DocumentData, collection, getDocs, doc, query, where, limit, serverTimestamp, writeBatch} from "firebase/firestore";
@@ -11,7 +11,9 @@ import { currentDayStart, nextDayStart, thisWeekStart } from './Utils/makeCleanD
 import sortOrder  from './Utils/sortOrder';
 import reNumberOrder from './Utils/reNumberOrder';
 import { maxPerDay } from './Utils/constants';
-
+import logo from './images/5Things_logo.png';
+import spinner from './images/loading-gif.gif';
+import { UpdateEntireTodoListFirestore, updateSingleTodoFirestore } from './Utils/FirestoreFunctions';
 
 const db = CheckFirestoreInit();
 
@@ -25,6 +27,7 @@ function App() {
   const [overDueTodos, setOverDueTodos] = useState<DocumentData[]>([]);
   const [completeTodos, setCompleteTodos] = useState<DocumentData[]>([]);
   const [displayDay, setDisplayDay] = useState<makeTodoDayOptions>('today');
+  const [transition, setTransition] = useState<boolean>(false);
 
   const provider = new GoogleAuthProvider();
   const dayOptions:makeTodoDayOptions[] = ['overdue', 'today', 'tomorrow', 'week', 'complete'] 
@@ -58,7 +61,7 @@ function App() {
     });
   }
 
-  const updateTodoList = (list:makeTodoDayOptions, todo:DocumentData) => {
+  const updateTodoListRender = (list:makeTodoDayOptions, todo:DocumentData) => {
     
     if (list === 'today') {
     setTodaysTodos((oldTodaysTodos) => [...oldTodaysTodos, todo]);
@@ -82,14 +85,13 @@ function App() {
 
   }
 
-  const checkListandUpdateTodos = (todoListName:makeTodoDayOptions, newTodoList:DocumentData[]) => {
+  const checkListandUpdateTodosRender = useCallback((todoListName:makeTodoDayOptions, newTodoList:DocumentData[]) => {
     if (todoListName === 'today') {
           
       setTodaysTodos([]);
       
       newTodoList.forEach((todo) => {
-
-        updateTodoList(todoListName, todo);
+        updateTodoListRender(todoListName, todo);
       
       })
     
@@ -101,7 +103,7 @@ function App() {
     
       newTodoList.forEach((todo) => {
 
-        updateTodoList(todoListName, todo);
+        updateTodoListRender(todoListName, todo);
     
       })
       
@@ -113,7 +115,7 @@ function App() {
     
       newTodoList.forEach((todo) => {
 
-        updateTodoList(todoListName, todo);
+        updateTodoListRender(todoListName, todo);
     
       })
     
@@ -125,13 +127,13 @@ function App() {
     
       newTodoList.forEach((todo) => {
 
-        updateTodoList(todoListName, todo);
+        updateTodoListRender(todoListName, todo);
     
       })
     
     }
 
-  }
+  }, [])
 
   const pickTodos = (day:makeTodoDayOptions) => {
     
@@ -174,84 +176,65 @@ function App() {
 
    return todaysTodos.length;
   }
-
+//////REORDER TODOS
   const reOrderTodo = async(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string) => {
+    setTransition(true);
+
+    const newTodoList:DocumentData[] = [];
     
-    const updateRenderAndDB = async(direction:'up' | 'down', swapTodoIndex:number, mainTodoIndex:number, newTodoList:DocumentData[]) => {
+    todoList.forEach((todo) => {
+      newTodoList.push(todo);
+    })
 
-      sortOrder(newTodoList, 'order');
-
-      checkListandUpdateTodos(todoListName, newTodoList);
-
-      try {
-        if(db && user) {
-          const batch = writeBatch(db);
-
-          const mainTodoRef = doc(db, 'Todos', newTodoList[mainTodoIndex].id);
-
-          batch.update(mainTodoRef, {
-            owner: user.uid,
-            complete: newTodoList[mainTodoIndex].complete,
-            order: newTodoList[mainTodoIndex].order,
-            dateDue: newTodoList[mainTodoIndex].dateDue,
-            name: newTodoList[mainTodoIndex].name,
-            dateUpdated: serverTimestamp() 
-          })
-
-          const swapTodoRef = doc(db, 'Todos', newTodoList[swapTodoIndex].id);
-
-          batch.update(swapTodoRef, {
-            owner: user.uid,
-            complete: newTodoList[swapTodoIndex].complete,
-            order: newTodoList[swapTodoIndex].order,
-            dateDue: newTodoList[swapTodoIndex].dateDue,
-            name: newTodoList[swapTodoIndex].name,
-            dateUpdated: serverTimestamp() })
-
-          await batch.commit();
-        
-        }
-
-      } catch (error) {
-
-        console.log(error);
-      
-      }
-
-    }
-
-    const newTodoList = todoList;
-    const mainTodoIndex = todoList.findIndex((doc) => doc.id === todoId);
+    const mainTodoIndex = newTodoList.findIndex((doc) => doc.id === todoId);
+    const mainTodo = newTodoList[mainTodoIndex];
     
+    let swapTodo:DocumentData; 
+    
+   const sendSwapDB = async(mainTodo:DocumentData, swapTodo:DocumentData) => {
+    
+    const mainPromise = updateSingleTodoFirestore(user!, mainTodo);
+    const swapPromise = updateSingleTodoFirestore(user!, swapTodo)
+  
+    Promise.all([mainPromise, swapPromise]);
 
+   }
+    
     switch (direction){
 
       case 'down': {
-        const swapTodoIndex = todoList.findIndex((doc) => doc.order === todoList[mainTodoIndex].order + 1);
-        
-        newTodoList[mainTodoIndex].order += 1;
-        newTodoList[swapTodoIndex].order -= 1;
+        const swapTodoIndex = mainTodoIndex + 1;
+        swapTodo = newTodoList[swapTodoIndex];
 
-        await updateRenderAndDB('down', swapTodoIndex, mainTodoIndex, newTodoList);
+        mainTodo.order += 1;
+        swapTodo.order -= 1;
 
       } 
 
       break;
 
       case 'up': {
-        const swapTodoIndex = todoList.findIndex((doc) => doc.order === todoList[mainTodoIndex].order - 1);
+        const swapTodoIndex = mainTodoIndex - 1;
+        swapTodo = newTodoList[swapTodoIndex];
+        console.log("🚀 ~ reOrderTodo ~ swapTodo:", swapTodo)
         
-        newTodoList[mainTodoIndex].order -= 1;
-        newTodoList[swapTodoIndex].order += 1;
-
-        await updateRenderAndDB('up', swapTodoIndex, mainTodoIndex, newTodoList);
+        mainTodo.order -= 1;
+        swapTodo.order += 1;
 
       }
       break;
     }
 
-  }
+    sortOrder(newTodoList, 'order');
+    checkListandUpdateTodosRender(todoListName, newTodoList);
+    
+    await sendSwapDB(mainTodo, swapTodo)
+      .then(() => {
+        console.log('all good');
+        setTransition(false)});
 
+  }
+/////CHANGEDAYTODOS//////
   const changeDayTodo = (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[], moveToListName:'today' |'tomorrow' | 'week' | 'complete', todoId:string) => {
     console.log("🚀 ~ changeDayTodo ~ fromTodoListName:", fromTodoListName)
     
@@ -272,20 +255,9 @@ function App() {
       try {
 
         if(db && user) {
+          UpdateEntireTodoListFirestore(user, fromList);
+
           const batchWorkingTodo = writeBatch(db);
-          const batchFromList = writeBatch(db);
-
-          fromList.forEach((todo) => {
-            batchFromList.update(doc(db, 'Todos', todo.id), {
-              owner: user.uid,
-              name: todo.name,
-              order: todo.order,
-              dateDue: todo.dateDue,
-              complete: todo.complete,
-              dateUpdated: serverTimestamp(),
-            });
-
-          })
 
           const workingTodoRef = doc(db, 'Todos', workingTodo.id);
 
@@ -312,7 +284,6 @@ function App() {
           }
 
           await batchWorkingTodo.commit();
-          await batchFromList.commit();
         
         }
 
@@ -377,8 +348,8 @@ function App() {
 
     }
     
-    checkListandUpdateTodos(moveToListName, finalMoveToList);
-    checkListandUpdateTodos(fromTodoListName, newFromTodoList);
+    checkListandUpdateTodosRender(moveToListName, finalMoveToList);
+    checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
     updateDBMoveDay(workingTodo, newFromTodoList);
 
   }
@@ -414,7 +385,7 @@ function App() {
 
     newFromTodoList.splice(todoIndex, 1);
 
-    checkListandUpdateTodos(fromTodoListName, newFromTodoList);
+    checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
     updateDBDelete(workingTodo);
 
   }
@@ -472,14 +443,13 @@ function App() {
 
       }
 
-      checkListandUpdateTodos('week', finalMoveToList);
-      checkListandUpdateTodos('complete', newFromTodoList);
+      checkListandUpdateTodosRender('week', finalMoveToList);
+      checkListandUpdateTodosRender('complete', newFromTodoList);
       updateDBRestoreTodo(workingTodo, newFromTodoList);
 
     }
 
   }
-
 
   useEffect(() => {
 
@@ -568,51 +538,79 @@ function App() {
   }, [user]);
 
   useEffect(() => {
+    setTransition(true);
+
     setOverDueTodos([]);
     setTodaysTodos([]);
     setTomorrowsTodos([]);
     setWeeksTodos([]);
-    
+
+    const cleanSortInitialList = (listName:makeTodoDayOptions, list:DocumentData[]) => {
+      const workingList:DocumentData[] = [];
+
+      list.forEach((todo) => {
+        workingList.push(todo);
+      }) 
+
+      const sortedList = sortOrder(workingList, 'order');
+       checkListandUpdateTodosRender(listName, sortedList);
+    }
+
     const currentDay = currentDayStart();
     const nextDay =  nextDayStart();
 
-    sortOrder(firstIncompleteTodos, 'order');
+    const unsortedOverDueTodos:DocumentData[] = [];
+    const unsortedTodaysTodos:DocumentData[] = [];
+    const unsortedTomorrowsTodos:DocumentData[] = [];
+    const unsortedWeeksTodos:DocumentData[] = [];
 
-      firstIncompleteTodos.forEach((todo) => {
-        const dueDate = todo.dateDue.toDate();
+    firstIncompleteTodos.forEach((todo) => {
+      const dueDate = todo.dateDue.toDate();
+    
+      if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
+    
+        unsortedOverDueTodos.push(todo);
+        //updateTodoListRender('overdue', todo);
+
+      } else if(dueDate.getTime() ===  currentDay.getTime() && todo.complete === false) {
+        
+        unsortedTodaysTodos.push(todo);
+        //updateTodoListRender('today', todo);        
       
-        if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
+      } else if(dueDate.getTime() === nextDay.getTime() && todo.complete === false) {
+        
+        unsortedTomorrowsTodos.push(todo);
+        //updateTodoListRender('tomorrow', todo);       
       
-          updateTodoList('overdue', todo);
+      } else if(dueDate.getTime() >  nextDay.getTime() && todo.complete === false) {
+        
+        unsortedWeeksTodos.push(todo);
+        //updateTodoListRender('week', todo);   
+      
+      }
 
-        } else if(dueDate.getTime() ===  currentDay.getTime() && todo.complete === false) {
-          
-          updateTodoList('today', todo);
-        
-        } else if(dueDate.getTime() === nextDay.getTime() && todo.complete === false) {
-          
-          updateTodoList('tomorrow', todo);
-        
-        } else if(dueDate.getTime() >  nextDay.getTime() && todo.complete === false) {
-          
-          updateTodoList('week', todo);
-        
-        } 
-
-      });       
+      cleanSortInitialList('overdue', unsortedOverDueTodos);
+      cleanSortInitialList('today', unsortedTodaysTodos);
+      cleanSortInitialList('tomorrow', unsortedTomorrowsTodos);
+      cleanSortInitialList('week', unsortedWeeksTodos);
+      
+    });
   
-  },[firstIncompleteTodos]);
+  },[firstIncompleteTodos, checkListandUpdateTodosRender]);
 
   useEffect(() => {
+
     setCompleteTodos([]);
 
     sortOrder(initialCompleteTodos, 'date');
 
     initialCompleteTodos.forEach((todo) =>
     {
-      updateTodoList('complete', todo);
+      updateTodoListRender('complete', todo);
     }
     )
+
+    setTransition(false);
 
   }, [initialCompleteTodos]);
 
@@ -620,11 +618,18 @@ function App() {
   
   //Login
     <>
-    <meta name="keywords" content="React, JavaScript, semantic markup, html" />
+    <meta name="keywords" content="Todo, Todo List, 5Things, Todo App," />
+
+      {transition &&
+        <div className='spinner'>
+          <img src={spinner} alt='spinner' />
+
+        </div>
+      }
 
       { !user && 
       <div className='startScreen'>
-        <img src={process.env.PUBLIC_URL + '/images/5Things_logo.png'} alt='5Things Logo' className='logoStartScreen'/>
+        <img src={logo} alt='5Things Logo' className='logoStartScreen'/>
             <button onClick={SIGN_IN_WITH_GOOGLE} className='googleButton'> 
             Sign In With Google
             <FcGoogle size={22} className='icon' />
@@ -638,7 +643,7 @@ function App() {
       { user &&
         <div className='appWrapper'>
           <div className='menuTop'>
-            <img className='menuTopLogo' src={process.env.PUBLIC_URL + '/images/5Things_logo.png'} alt='5Things Logo'></img>
+            <img className='menuTopLogo' src={logo} alt='5Things Logo'></img>
             <button onClick={SIGN_OUT} className='buttonLogout'>
             Sign Out
             
@@ -651,7 +656,7 @@ function App() {
               todaysTodos = {todaysTodos}
               tomorrowsTodos = {tomorrowsTodos}
               weeksTodos = {weeksTodos}
-              updateTodo = {updateTodoList}
+              updateTodo = {updateTodoListRender}
             /> 
           </div>
 

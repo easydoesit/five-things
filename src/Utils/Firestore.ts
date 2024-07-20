@@ -1,7 +1,6 @@
 //firestore import
-import { getFirestore } from "firebase/firestore";
+import { getFirestore} from "firebase/firestore";
 import { firebaseApp } from "./FirebaseConfig";
-
 
 export function CheckFirestoreInit() {
 
@@ -15,3 +14,7 @@ export function CheckFirestoreInit() {
   }
 
 }
+
+
+
+
