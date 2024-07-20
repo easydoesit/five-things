@@ -230,8 +230,8 @@ function App() {
       break;
     }
 
-    sortOrder(newTodoList, 'order');
-    checkListandUpdateTodosRender(todoListName, newTodoList);
+    const sortedNewTodoList = sortOrder(newTodoList, 'order');
+    checkListandUpdateTodosRender(todoListName, sortedNewTodoList);
     
     await sendSwapDB(mainTodo, swapTodo)
       .then(() => {
