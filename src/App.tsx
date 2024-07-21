@@ -28,6 +28,7 @@ function App() {
   const [completeTodos, setCompleteTodos] = useState<DocumentData[]>([]);
   const [displayDay, setDisplayDay] = useState<makeTodoDayOptions>('today');
   const [transition, setTransition] = useState<boolean>(false);
+  const [revealSignIn, setRevealSignIn] = useState<boolean>(false);
 
   const provider = new GoogleAuthProvider();
   const dayOptions:makeTodoDayOptions[] = ['overdue', 'today', 'tomorrow', 'week', 'complete'] 
@@ -583,11 +584,17 @@ function App() {
       { !user && 
       <div className='startScreen'>
         <img src={logo} alt='5Things Logo' className='logoStartScreen'/>
+        {revealSignIn ?  
             <button onClick={SIGN_IN_WITH_GOOGLE} className='googleButton'> 
             Sign In With Google
             <FcGoogle size={22} className='icon' />
           </button>
-          {user}
+        
+      :
+      <button onClick={() => setRevealSignIn(true)} className='googleButton'> 
+      Login
+    </button>
+      }
         </div>
       }
 
