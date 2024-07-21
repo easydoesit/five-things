@@ -186,7 +186,6 @@ function App() {
 
   const reOrderTodo = async(todoListName:makeTodoDayOptions, todoList:DocumentData[], direction:'down' | 'up', todoId:string) => {
     setTransition(true);
-
     const newTodoList:DocumentData[] = [];
     
     todoList.forEach((todo) => {
@@ -199,7 +198,7 @@ function App() {
     let swapTodo:DocumentData; 
     
    const sendSwapDB = async(mainTodo:DocumentData, swapTodo:DocumentData) => {
-    
+
     const mainPromise = updateSingleTodoFirestore(user!, mainTodo);
     const swapPromise = updateSingleTodoFirestore(user!, swapTodo)
   
@@ -230,13 +229,13 @@ function App() {
       }
       break;
     }
-
-    const sortedNewTodoList = sortOrder(newTodoList, 'order');
-    checkListandUpdateTodosRender(todoListName, sortedNewTodoList);
     
     await sendSwapDB(mainTodo, swapTodo)
       .then(() => {
-        setTransition(false)});
+        const sortedNewTodoList = sortOrder(newTodoList, 'order');
+        checkListandUpdateTodosRender(todoListName, sortedNewTodoList);
+        setTransition(false)
+      });
 
   }
 
@@ -315,20 +314,20 @@ function App() {
 
     }
 
-    finalMoveToList.push(workingTodo);
-    let sortedFinalMoveToList:DocumentData[]  = [];///only used for complete list
-
-    if (moveToListName === 'complete') {
-      sortedFinalMoveToList = sortOrder(finalMoveToList, 'date');
-      checkListandUpdateTodosRender(moveToListName, sortedFinalMoveToList);
-    } else {
-      checkListandUpdateTodosRender(moveToListName, finalMoveToList);
-    }
-    
-    checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
 
     await updateDBMoveDay(workingTodo, newFromTodoList)
     .then(() => {
+      finalMoveToList.push(workingTodo);
+      let sortedFinalMoveToList:DocumentData[]  = [];///only used for complete list
+  
+      if (moveToListName === 'complete') {
+        sortedFinalMoveToList = sortOrder(finalMoveToList, 'date');
+        checkListandUpdateTodosRender(moveToListName, sortedFinalMoveToList);
+      } else {
+        checkListandUpdateTodosRender(moveToListName, finalMoveToList);
+      }
+      
+      checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
       setTransition(false);
     });
 
@@ -350,10 +349,13 @@ function App() {
     const todoIndex = newFromTodoList.findIndex((doc) => doc.id === todoId);
     const workingTodo =  newFromTodoList[todoIndex];
 
-    newFromTodoList.splice(todoIndex, 1);
-    checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
+    
     await deleteSingleTodoFirestore(user!, workingTodo)
-    .then(() => setTransition(false));
+    .then(() => {
+      newFromTodoList.splice(todoIndex, 1);
+      checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
+      setTransition(false);
+    });
     
   }
 
@@ -383,17 +385,18 @@ function App() {
       workingTodo.complete = false;
       workingTodo.order = weeksTodos.length;
       
-      finalMoveToList.push(workingTodo);
-      
-      newFromTodoList.splice(workingTodoIndex, 1);
-      
-      reNumberOrder(newFromTodoList, workingTodo.order);
-
-      checkListandUpdateTodosRender('week', finalMoveToList);
-      checkListandUpdateTodosRender('complete', newFromTodoList);
-      
       updateSingleTodoFirestore(user!, workingTodo)
-      .then(() => setTransition(false));
+      .then(() => {
+        finalMoveToList.push(workingTodo);
+      
+        newFromTodoList.splice(workingTodoIndex, 1);
+      
+        reNumberOrder(newFromTodoList, workingTodo.order);
+
+        checkListandUpdateTodosRender('week', finalMoveToList);
+        checkListandUpdateTodosRender('complete', newFromTodoList);
+        
+        setTransition(false)});
 
     } else {
       alert('Sorry The Week is Full.\n\n Recommend you reorganize.')
