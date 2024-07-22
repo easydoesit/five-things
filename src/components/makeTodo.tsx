@@ -55,6 +55,7 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos,
   
   }, [thisListDay]);
 
+  console.log(defaultDay);
 
 
   const  defaultRadio = (day:makeTodoDayOptions) => {
@@ -64,19 +65,25 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos,
       return false;
     } else if(defaultDay === 'today' && day === 'today' && todaysTodos.length < maxPerDay) {
       return true;
-    } 
+    } else if (defaultDay !== 'today' && day === 'today') {
+      return false;
+    }
 
     if(defaultDay === 'tomorrow' && day === 'tomorrow' && tomorrowsTodos.length >= maxPerDay) {
       setDefaultDay('week');
       return false;
     } else if(defaultDay === 'tomorrow' && day === 'tomorrow' && tomorrowsTodos.length < maxPerDay) {
       return true;
-    } 
+    } else if (defaultDay !== 'tomorrow' && day === 'tomorrow') {
+      return false;
+    }
    
     if(defaultDay === 'week' && day === 'week' && weeksTodos.length >= maxPerDay) {
       return false;
     } else if (defaultDay === 'week' && day === 'week' && weeksTodos.length < maxPerDay) {
       return true;
+    } else if (defaultDay !== 'week' && day === 'week') {
+      return false;
     }
   }
 
