@@ -204,7 +204,6 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos,
 
     <div className='makeTodoHolder'>
 
-      
       <div className='makeTodoFormWrapper'>
         <form className='makeTodoForm' id='makeTodoForm' name="make_todo" onSubmit={handleMakeTodo}>
           <div className='makeTodoColumn'>
@@ -220,12 +219,12 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos,
           <div className='makeTodoRadioButtonsGroup'>
               {
                 days.map((day, index) => ( 
-                <div key={index}>
-                { <label className={disableRadio(day) ? "makeTodoButtonTransparent" : 'makeTodoButtonOpaque'}>
-                    <input type="radio" className={`radio${day}`}onChange={onOptionChange} name='days' value={day}  defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {firstLetterToUpperCase(day)}
-                  </label>
-                }
-                </div>
+              
+                <label key={index} className={disableRadio(day) ? "makeTodoButtonTransparent" : 'makeTodoButtonOpaque'}>
+                  <input type="radio" className={`radio${day}`}onChange={onOptionChange} name='days' value={day}  checked={defaultRadio(day)} defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {firstLetterToUpperCase(day)}
+                </label>
+                
+                
                 ))
               }
 
