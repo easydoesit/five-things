@@ -620,6 +620,7 @@ function App() {
               tomorrowsTodos = {tomorrowsTodos}
               weeksTodos = {weeksTodos}
               updateTodo = {updateTodoListRender}
+              displayDay = {displayDay}
             /> 
           </div>
 

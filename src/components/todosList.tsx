@@ -19,7 +19,7 @@ export default function TodosList({todos, title, day, reOrderTodo, changeDayTodo
 
   return (
 
-    <div className="listInfo">
+    <div className={`listInfo listInfo${day}`}>
       <h1>{title}</h1>
       <ol>
         {

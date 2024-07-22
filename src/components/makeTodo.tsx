@@ -1,4 +1,4 @@
-import React, {ChangeEvent, useState, SyntheticEvent} from 'react';
+import React, {ChangeEvent, useState, SyntheticEvent, useEffect} from 'react';
 import { CheckFirestoreInit } from '../Utils/Firestore';
 import { DocumentData, addDoc, collection, serverTimestamp,} from "firebase/firestore";
 import { User} from "firebase/auth";
@@ -13,6 +13,7 @@ interface MakeTodoI {
   tomorrowsTodos: DocumentData[];
   weeksTodos:DocumentData[];
   updateTodo(list:makeTodoDayOptions, todo: DocumentData):void;
+  displayDay:makeTodoDayOptions;
 }
 
 interface TodoFieldI {
@@ -22,7 +23,7 @@ interface TodoFieldI {
   user:User | null;
 }
 
-export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos, updateTodo}:MakeTodoI) {
+export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos, updateTodo, displayDay}:MakeTodoI) {
     
   const toDoInitialState:TodoFieldI = {
       name: "",
@@ -32,32 +33,53 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos,
     }
   
   const [fieldInfo, setFieldInfo] = useState<TodoFieldI>(toDoInitialState);//fieldvalues
+  const thisListDay = displayDay;
+  const [defaultDay, setDefaultDay] = useState<'today' | 'tomorrow' | 'week' >("today");
 
   const days:makeTodoDayOptions[] = ['today', 'tomorrow', 'week'];
-  let defaultDay:makeTodoDayOptions = 'today';
+  //let defaultDay:makeTodoDayOptions = 'today';
+
+  useEffect(() => {
+  
+    if (thisListDay === 'today' || thisListDay === 'overdue') {
+      setDefaultDay('today');
+    }
+  
+    if (thisListDay === 'tomorrow') {
+      setDefaultDay('tomorrow');
+    }
+    
+    if (thisListDay === 'week' || thisListDay === 'complete') {
+      setDefaultDay('week');
+    }
+  
+  }, [thisListDay]);
+
+
 
   const  defaultRadio = (day:makeTodoDayOptions) => {
 
     if(defaultDay === 'today' && day === 'today' && todaysTodos.length >= maxPerDay) {
-      defaultDay = 'tomorrow'
+      setDefaultDay('tomorrow');
       return false;
     } else if(defaultDay === 'today' && day === 'today' && todaysTodos.length < maxPerDay) {
       return true;
-    }
-    
+    } 
+
     if(defaultDay === 'tomorrow' && day === 'tomorrow' && tomorrowsTodos.length >= maxPerDay) {
-      defaultDay = 'week'
+      setDefaultDay('week');
       return false;
     } else if(defaultDay === 'tomorrow' && day === 'tomorrow' && tomorrowsTodos.length < maxPerDay) {
       return true;
-    }
-    
+    } 
+   
     if(defaultDay === 'week' && day === 'week' && weeksTodos.length >= maxPerDay) {
       return false;
     } else if (defaultDay === 'week' && day === 'week' && weeksTodos.length < maxPerDay) {
       return true;
     }
   }
+
   
   const disableRadio = (day:makeTodoDayOptions) => {
     
@@ -193,7 +215,7 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos,
                 days.map((day, index) => ( 
                 <div key={index}>
                 { <label className={disableRadio(day) ? "makeTodoButtonTransparent" : 'makeTodoButtonOpaque'}>
-                    <input type="radio" onChange={onOptionChange} name='days' value={day}  defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {firstLetterToUpperCase(day)}
+                    <input type="radio" className={`radio${day}`}onChange={onOptionChange} name='days' value={day}  defaultChecked={defaultRadio(day)} disabled={disableRadio(day)}/> {firstLetterToUpperCase(day)}
                   </label>
                 }
                 </div>
