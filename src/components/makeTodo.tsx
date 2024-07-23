@@ -27,7 +27,7 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos,
     
   const toDoInitialState:TodoFieldI = {
       name: "",
-      day:'today',
+      day:displayDay,
       count:0,
       user:user,
     }
