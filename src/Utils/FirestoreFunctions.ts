@@ -1,4 +1,4 @@
-import {DocumentData, writeBatch, doc,serverTimestamp, updateDoc, deleteDoc } from "firebase/firestore";
+import {addDoc, collection, DocumentData, writeBatch, doc,serverTimestamp, updateDoc, deleteDoc } from "firebase/firestore";
 import { CheckFirestoreInit } from "./Firestore";
 import { User } from "firebase/auth";
 
@@ -77,4 +77,22 @@ export async function deleteSingleTodoFirestore(user:User, todo:DocumentData) {
     alert(error);
     
   }
+}
+
+export async function createTodoFirestore(user:User, todo:DocumentData) {
+  
+  try {
+
+    if(db && user) {
+        
+      await addDoc(collection(db, 'Todos'), todo);
+
+    }
+
+  } catch (error) {
+
+    console.log(error);
+  
+  }
+  
 }

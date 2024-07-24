@@ -7,7 +7,7 @@ import { firebaseAuth } from './Utils/FirebaseConfig';
 import TodosList from './components/todosList';
 import MakeTodo from './components/makeTodo';
 import {firstLetterToUpperCase} from './Utils/changeCase';
-import { currentDayStart, nextDayStart, thisWeekStart } from './Utils/makeCleanDays';
+import { currentDayStart, nextDayStart, thisWeekStart } from './Utils/dates';
 import sortOrder  from './Utils/sortOrder';
 import reNumberOrder from './Utils/reNumberOrder';
 import { maxPerDay } from './Utils/constants';
@@ -60,6 +60,14 @@ function App() {
     });
   }
 
+  const toggleTransition = (on:boolean) => {
+    if (on === false) {
+      setTransition(false);
+    }else {
+      setTransition(true);
+    }
+  }
+
   const updateTodoListRender = (list:makeTodoDayOptions, todo:DocumentData) => {
     
     if (list === 'today') {
@@ -90,54 +98,32 @@ function App() {
       
       case 'today':
         setTodaysTodos([]);
-      
-        newTodoList.forEach((todo) => {
-          updateTodoListRender(todoListName, todo);
-        
-        });
       break;
 
       case 'tomorrow':
         setTomorrowsTodos([]);
-    
-        newTodoList.forEach((todo) => {
-
-          updateTodoListRender(todoListName, todo);
-      
-        });
       break;
   
       case 'week':
         setWeeksTodos([]);
-    
-        newTodoList.forEach((todo) => {
-  
-          updateTodoListRender(todoListName, todo);
-      
-        })
       break;
   
       case 'overdue':
         setOverDueTodos([]);
-    
-        newTodoList.forEach((todo) => {
 
-          updateTodoListRender(todoListName, todo);
-      
-        })
       break;
   
       case 'complete':
         setCompleteTodos([]);
-    
-        newTodoList.forEach((todo) => {
-
-          updateTodoListRender(todoListName, todo);
-      
-        })
+  
       break;
     
     }
+
+    newTodoList.forEach((todo) => {
+      updateTodoListRender(todoListName, todo);
+    
+    });
     
   }, [])
 
@@ -340,6 +326,7 @@ function App() {
 
   const deleteTodo = async (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[],todoId:string) => {
     setTransition(true); 
+    
     const newFromTodoList:DocumentData[] = [];
      
     fromTodoList.forEach((todo) => {
@@ -348,11 +335,14 @@ function App() {
    
     const todoIndex = newFromTodoList.findIndex((doc) => doc.id === todoId);
     const workingTodo =  newFromTodoList[todoIndex];
-
     
     await deleteSingleTodoFirestore(user!, workingTodo)
     .then(() => {
       newFromTodoList.splice(todoIndex, 1);
+      reNumberOrder(newFromTodoList, 0);
+
+      UpdateEntireTodoListFirestore(user!, newFromTodoList);
+
       checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
       setTransition(false);
     });
@@ -527,22 +517,18 @@ function App() {
       if(dueDate.getTime() < currentDay.getTime() && todo.complete === false) {
     
         unsortedOverDueTodos.push(todo);
-        //updateTodoListRender('overdue', todo);
 
       } else if(dueDate.getTime() ===  currentDay.getTime() && todo.complete === false) {
         
-        unsortedTodaysTodos.push(todo);
-        //updateTodoListRender('today', todo);        
+        unsortedTodaysTodos.push(todo);     
       
       } else if(dueDate.getTime() === nextDay.getTime() && todo.complete === false) {
         
-        unsortedTomorrowsTodos.push(todo);
-        //updateTodoListRender('tomorrow', todo);       
+        unsortedTomorrowsTodos.push(todo);   
       
       } else if(dueDate.getTime() >  nextDay.getTime() && todo.complete === false) {
         
-        unsortedWeeksTodos.push(todo);
-        //updateTodoListRender('week', todo);   
+        unsortedWeeksTodos.push(todo); 
       
       }
 
@@ -619,8 +605,9 @@ function App() {
               todaysTodos = {todaysTodos}
               tomorrowsTodos = {tomorrowsTodos}
               weeksTodos = {weeksTodos}
-              updateTodo = {updateTodoListRender}
+              checkListandUpdateTodosRender = {checkListandUpdateTodosRender}
               displayDay = {displayDay}
+              toggleTransition = {toggleTransition}
             /> 
           </div>
 
