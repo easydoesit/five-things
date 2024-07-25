@@ -563,7 +563,7 @@ function App() {
     <>
     <meta name="keywords" content="Todo, Todo List, 5Things, Todo App," />
 
-      {transition &&
+      {!transition &&
         <div className='spinner'>
           <img src={spinner} alt='spinner' />
 

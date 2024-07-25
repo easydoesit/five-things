@@ -185,6 +185,11 @@ code {
   z-index: 1000;
 }
 
+.spinner img {
+  width: 15%;
+  height: auto;
+}
+
 .appWrapper {
   display: flex;
   flex-flow: column;
