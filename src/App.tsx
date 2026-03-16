@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import {useCallback, useEffect, useState} from 'react';
 import {FcGoogle} from 'react-icons/fc';
 import { CheckFirestoreInit } from './Utils/Firestore';
 import { DocumentData, collection, getDocs, query, where, limit} from "firebase/firestore";
@@ -32,7 +32,6 @@ function App() {
 
   const provider = new GoogleAuthProvider();
   const dayOptions:makeTodoDayOptions[] = ['overdue', 'today', 'tomorrow', 'week', 'complete'] 
-
   const SIGN_IN_WITH_GOOGLE = async () => {
 
       await signInWithPopup(firebaseAuth, provider)
@@ -63,13 +62,16 @@ function App() {
   const toggleTransition = (on:boolean) => {
     if (on === false) {
       setTransition(false);
+
+      console.log("transition false");
     }else {
       setTransition(true);
+      console.log("transition true");
     }
   }
 
   const updateTodoListRender = (list:makeTodoDayOptions, todo:DocumentData) => {
-    
+
     if (list === 'today') {
     setTodaysTodos((oldTodaysTodos) => [...oldTodaysTodos, todo]);
     }
@@ -183,14 +185,14 @@ function App() {
     
     let swapTodo:DocumentData; 
     
-   const sendSwapDB = async(mainTodo:DocumentData, swapTodo:DocumentData) => {
+    const sendSwapDB = async(mainTodo:DocumentData, swapTodo:DocumentData) => {
 
-    const mainPromise = updateSingleTodoFirestore(user!, mainTodo);
-    const swapPromise = updateSingleTodoFirestore(user!, swapTodo)
+      const mainPromise = updateSingleTodoFirestore(user!, mainTodo);
+      const swapPromise = updateSingleTodoFirestore(user!, swapTodo)
   
-    Promise.all([mainPromise, swapPromise]);
+      return await Promise.all([mainPromise, swapPromise]);
 
-   }
+    };
     
     switch (direction){
 
@@ -256,7 +258,7 @@ function App() {
           const listUpdate = UpdateEntireTodoListFirestore(user, fromList);
           const todoUpdate = updateSingleTodoFirestore(user, workingTodo);
         
-          Promise.all([listUpdate, todoUpdate]);
+          return await Promise.all([listUpdate, todoUpdate]);
 
         }
 
@@ -325,8 +327,6 @@ function App() {
   
 
   const deleteTodo = async (fromTodoListName:makeTodoDayOptions, fromTodoList:DocumentData[],todoId:string) => {
-    setTransition(true); 
-    
     const newFromTodoList:DocumentData[] = [];
      
     fromTodoList.forEach((todo) => {
@@ -335,17 +335,22 @@ function App() {
    
     const todoIndex = newFromTodoList.findIndex((doc) => doc.id === todoId);
     const workingTodo =  newFromTodoList[todoIndex];
-    
-    await deleteSingleTodoFirestore(user!, workingTodo)
-    .then(() => {
+
+    try {
+      setTransition(true); 
+
+      await deleteSingleTodoFirestore(user!, workingTodo)
       newFromTodoList.splice(todoIndex, 1);
       reNumberOrder(newFromTodoList, 0);
 
-      UpdateEntireTodoListFirestore(user!, newFromTodoList);
-
-      checkListandUpdateTodosRender(fromTodoListName, newFromTodoList);
+      await UpdateEntireTodoListFirestore(user!, newFromTodoList)
+      checkListandUpdateTodosRender(fromTodoListName, newFromTodoList)
+      
+    } catch (error) {
+      alert("Delete Failed");
+    } finally {
       setTransition(false);
-    });
+    }
     
   }
 
@@ -356,7 +361,6 @@ function App() {
   const restoreTodo = async(todoId:string) => {
 
     if(weeksTodos.length < maxPerDay) {
-      setTransition(true);
       
       const newFromTodoList:DocumentData[] = [];
       const finalMoveToList:DocumentData[] = [];
@@ -374,20 +378,24 @@ function App() {
       
       workingTodo.complete = false;
       workingTodo.order = weeksTodos.length;
+      try {
+        setTransition(true);
+        await updateSingleTodoFirestore(user!, workingTodo)
+        .then(() => {
+          finalMoveToList.push(workingTodo);
       
-      updateSingleTodoFirestore(user!, workingTodo)
-      .then(() => {
-        finalMoveToList.push(workingTodo);
+          newFromTodoList.splice(workingTodoIndex, 1);
       
-        newFromTodoList.splice(workingTodoIndex, 1);
-      
-        reNumberOrder(newFromTodoList, workingTodo.order);
+          reNumberOrder(newFromTodoList, workingTodo.order);
 
-        checkListandUpdateTodosRender('week', finalMoveToList);
-        checkListandUpdateTodosRender('complete', newFromTodoList);
-        
-        setTransition(false)});
-
+          checkListandUpdateTodosRender('week', finalMoveToList);
+          checkListandUpdateTodosRender('complete', newFromTodoList);
+      });
+      } catch (error) {
+        alert('Restore Failed Try again');
+      } finally {
+        setTransition(false)
+      }
     } else {
       alert('Sorry The Week is Full.\n\n Recommend you reorganize.')
     }
@@ -485,7 +493,6 @@ function App() {
   }, [user]);
 
   useEffect(() => {
-    setTransition(true);
 
     setOverDueTodos([]);
     setTodaysTodos([]);
@@ -536,13 +543,12 @@ function App() {
       cleanSortInitialList('today', unsortedTodaysTodos);
       cleanSortInitialList('tomorrow', unsortedTomorrowsTodos);
       cleanSortInitialList('week', unsortedWeeksTodos);
-      
+
     });
-  
+
   },[firstIncompleteTodos, checkListandUpdateTodosRender]);
 
   useEffect(() => {
-
     setCompleteTodos([]);
 
     sortOrder(initialCompleteTodos, 'date');
@@ -553,8 +559,6 @@ function App() {
     }
     )
 
-    setTransition(false);
-
   }, [initialCompleteTodos]);
 
   return (
@@ -563,7 +567,7 @@ function App() {
     <>
     <meta name="keywords" content="Todo, Todo List, 5Things, Todo App," />
 
-      {!transition &&
+      {transition &&
         <div className='spinner'>
           <img src={spinner} alt='spinner' />
 

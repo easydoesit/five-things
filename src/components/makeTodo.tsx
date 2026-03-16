@@ -312,6 +312,7 @@ export default function MakeTodo({user, todaysTodos, tomorrowsTodos, weeksTodos,
             placeholder='What you Gonna Do?'
             value={fieldInfo.name}
             onChange={onFieldChange}
+            autoComplete="off"
             />  
           
           <div className='makeTodoRadioButtonsGroup'>
